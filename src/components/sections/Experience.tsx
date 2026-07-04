@@ -1,4 +1,5 @@
 import { BlurFade } from "@/components/ui/BlurFade";
+import { SectionHeader } from "@/components/ui/SectionHeader";
 
 const experiences = [
   {
@@ -39,38 +40,33 @@ const experiences = [
 
 export function Experience() {
   return (
-    <section id="experience" className="py-32 px-6 border-t border-white/[0.06]">
+    <section id="experience" className="py-24 md:py-32 px-6 border-t border-white/[0.06]">
       <div className="max-w-6xl mx-auto">
-        <BlurFade>
-          <p className="text-emerald-400 text-xs font-mono tracking-[0.2em] uppercase mb-3">
-            <span className="text-emerald-400/50 mr-2">02.</span>Background
-          </p>
-          <h2 className="text-4xl md:text-5xl font-bold mb-16">Experience</h2>
-        </BlurFade>
+        <SectionHeader index="02" kicker="Background" title="Experience" />
 
         <div className="relative">
           <div className="absolute left-[180px] top-0 bottom-0 w-px bg-white/[0.06] hidden md:block" />
 
-          <div className="space-y-16">
+          <div className="space-y-14 md:space-y-16">
             {experiences.map((exp, i) => (
               <BlurFade key={i} delay={i * 0.1}>
                 <div className="md:grid md:grid-cols-[180px_1fr] gap-8 relative">
                   <div className="md:text-right mb-4 md:mb-0 md:pr-8">
-                    <p className="text-white/35 text-xs font-mono leading-relaxed">{exp.period}</p>
-                    <p className="text-white/20 text-xs font-mono mt-1">{exp.type}</p>
+                    <p className="text-white/55 text-xs font-mono leading-relaxed">{exp.period}</p>
+                    <p className="text-white/45 text-xs font-mono mt-1">{exp.type}</p>
                   </div>
 
                   <div className="hidden md:block absolute left-[180px] top-1.5 w-2 h-2 rounded-full bg-emerald-500 -translate-x-[4.5px] ring-4 ring-[#080808]" />
 
                   <div className="md:pl-8">
                     <h3 className="text-white font-semibold text-lg leading-snug">{exp.role}</h3>
-                    <p className="text-emerald-400/70 text-sm font-mono mt-1 mb-5">
+                    <p className="text-emerald-400/90 text-sm font-mono mt-1 mb-5">
                       {exp.company} · {exp.location}
                     </p>
                     <ul className="space-y-2.5">
                       {exp.bullets.map((bullet, j) => (
-                        <li key={j} className="text-white/50 text-sm leading-relaxed flex gap-3">
-                          <span className="text-emerald-500/50 shrink-0 mt-0.5">—</span>
+                        <li key={j} className="text-white/65 text-sm leading-relaxed flex gap-3">
+                          <span className="text-emerald-500/60 shrink-0 mt-0.5">—</span>
                           {bullet}
                         </li>
                       ))}

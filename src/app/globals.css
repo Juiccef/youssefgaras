@@ -23,6 +23,23 @@ html {
   scroll-behavior: smooth;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+::selection {
+  background: rgba(16, 185, 129, 0.35);
+}
+
+/* Hero scroll cue — a short segment sliding down a hairline track */
+@keyframes scroll-cue {
+  0% { transform: translateY(-100%); opacity: 0; }
+  30% { opacity: 1; }
+  100% { transform: translateY(350%); opacity: 0; }
+}
+
 .dot-grid {
   background-image: radial-gradient(circle, rgba(255,255,255,0.12) 1px, transparent 1px);
   background-size: 28px 28px;

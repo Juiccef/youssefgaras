@@ -23,17 +23,17 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-12">
           <div>
             <p className="font-mono text-emerald-400 font-bold text-sm mb-3">YG</p>
-            <p className="text-white/40 text-sm leading-relaxed max-w-[220px]">
+            <p className="text-white/60 text-sm leading-relaxed max-w-[220px]">
               Cybersecurity engineer & CS student at Georgia State. CCNA certified, pursuing Security+. Open to security and SWE roles starting Summer 2026.
             </p>
           </div>
 
           <div>
-            <p className="text-white/20 text-xs uppercase tracking-widest font-mono mb-5">Navigation</p>
+            <p className="text-white/50 text-xs uppercase tracking-widest font-mono mb-5">Navigation</p>
             <ul className="space-y-2.5">
               {navLinks.map(({ href, label }) => (
                 <li key={label}>
-                  <a href={href} className="text-white/45 hover:text-white text-sm transition-colors">
+                  <a href={href} className="text-white/60 hover:text-white text-sm transition-colors">
                     {label}
                   </a>
                 </li>
@@ -42,7 +42,7 @@ export function Footer() {
           </div>
 
           <div>
-            <p className="text-white/20 text-xs uppercase tracking-widest font-mono mb-5">Connect</p>
+            <p className="text-white/50 text-xs uppercase tracking-widest font-mono mb-5">Connect</p>
             <ul className="space-y-3">
               {socialLinks.map(({ icon: Icon, href, label }) => (
                 <li key={label}>
@@ -50,7 +50,7 @@ export function Footer() {
                     href={href}
                     target={href.startsWith("mailto") ? undefined : "_blank"}
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2.5 text-white/45 hover:text-white text-sm transition-colors group"
+                    className="flex items-center gap-2.5 text-white/60 hover:text-white text-sm transition-colors group"
                   >
                     <Icon className="w-4 h-4 group-hover:text-emerald-400 transition-colors shrink-0" />
                     {label}
@@ -62,10 +62,10 @@ export function Footer() {
         </div>
 
         <div className="pt-6 border-t border-white/[0.04] flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-white/20 text-xs font-mono">© {new Date().getFullYear()} Youssef Garas</p>
+          <p className="text-white/50 text-xs font-mono">© {new Date().getFullYear()} Youssef Garas</p>
           <div className="flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-            <p className="text-white/20 text-xs font-mono">Open to opportunities</p>
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <p className="text-white/50 text-xs font-mono">Open to opportunities</p>
           </div>
         </div>
       </div>

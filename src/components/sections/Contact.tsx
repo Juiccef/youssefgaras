@@ -1,4 +1,5 @@
 import { BlurFade } from "@/components/ui/BlurFade";
+import { SectionHeader } from "@/components/ui/SectionHeader";
 import { Mail } from "lucide-react";
 import { GithubIcon, LinkedinIcon, InstagramIcon } from "@/components/ui/SocialIcons";
 
@@ -31,17 +32,14 @@ const links = [
 
 export function Contact() {
   return (
-    <section id="contact" className="py-32 px-6 border-t border-white/[0.06]">
+    <section id="contact" className="py-24 md:py-32 px-6 border-t border-white/[0.06]">
       <div className="max-w-4xl mx-auto">
-        <BlurFade>
-          <p className="text-emerald-400 text-xs font-mono tracking-[0.2em] uppercase mb-3">
-            <span className="text-emerald-400/50 mr-2">05.</span>Contact
-          </p>
-          <h2 className="text-4xl md:text-5xl font-bold mb-4">Get in Touch</h2>
-          <p className="text-white/50 text-lg mb-14 max-w-lg">
-            Open to SWE and security engineering roles for Summer/Fall 2026. Always happy to talk about interesting projects.
-          </p>
-        </BlurFade>
+        <SectionHeader
+          index="05"
+          kicker="Connect"
+          title="Contact"
+          lede="Open to SWE and security engineering roles for Summer/Fall 2026. Always happy to talk about interesting projects."
+        />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {links.map(({ icon: Icon, label, href, handle }, i) => (
@@ -56,8 +54,8 @@ export function Contact() {
                   <Icon className="w-5 h-5 text-white/40 group-hover:text-emerald-400 transition-colors" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-white/30 text-xs font-mono mb-0.5">{label}</p>
-                  <p className="text-white/80 font-medium text-sm truncate">{handle}</p>
+                  <p className="text-white/50 text-xs font-mono mb-0.5">{label}</p>
+                  <p className="text-white/85 font-medium text-sm truncate">{handle}</p>
                 </div>
               </a>
             </BlurFade>

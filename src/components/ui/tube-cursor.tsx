@@ -10,6 +10,8 @@ type TubesCursorProps = {
   initialColors?: string[];
   lightColors?: string[];
   lightIntensity?: number;
+  /** 0–1, dims the WebGL canvas so it frames content instead of covering it */
+  canvasOpacity?: number;
   titleSize?: string;
   subtitleSize?: string;
   captionSize?: string;
@@ -20,21 +22,23 @@ type TubesCursorProps = {
 };
 
 const TubesCursor = ({
-  title = "Tubes",
-  subtitle = "Cursor",
-  caption = "WebGPU / WebGL",
+  title,
+  subtitle,
+  caption,
   initialColors = ["#f967fb", "#53bc28", "#6958d5"],
   lightColors = ["#83f36e", "#fe8a2e", "#ff008a", "#60aed5"],
   lightIntensity = 200,
+  canvasOpacity = 1,
   titleSize = "text-[80px]",
   subtitleSize = "text-[60px]",
   captionSize = "text-base",
-  enableRandomizeOnClick = true,
+  enableRandomizeOnClick = false,
   className = "",
   height = "h-screen",
   children,
 }: TubesCursorProps) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const appRef = useRef<any>(null);
 
   useEffect(() => {
@@ -42,8 +46,10 @@ const TubesCursor = ({
     let destroyed = false;
 
     (async () => {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment, @typescript-eslint/no-explicit-any
-      const mod = await (Function('return import("https://cdn.jsdelivr.net/npm/threejs-components@0.0.19/build/cursors/tubes1.min.js")')() as Promise<any>);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const mod = await (Function('return import("https://cdn.jsdelivr.net/npm/threejs-components@0.0.19/build/cursors/tubes1.min.js")')() as Promise<any>).catch(() => null);
+      if (!mod) return; // CDN unavailable — the CSS glow fallback carries the hero
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const TubesCursorCtor = (mod as any).default ?? mod;
 
       if (!canvasRef.current || destroyed) return;
@@ -69,11 +75,13 @@ const TubesCursor = ({
         canvasRef.current.style.setProperty("width", "100%", "important");
         canvasRef.current.style.setProperty("height", "100%", "important");
         canvasRef.current.style.setProperty("z-index", "0", "important");
+        canvasRef.current.style.setProperty("opacity", String(canvasOpacity), "important");
       };
       forceAbsolute();
       // Re-apply if the library mutates style on resize
       const observer = new MutationObserver(forceAbsolute);
       observer.observe(canvasRef.current!, { attributes: true, attributeFilter: ["style"] });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (appRef.current as any).__styleObserver = observer;
 
       if (enableRandomizeOnClick) {
@@ -93,6 +101,7 @@ const TubesCursor = ({
       destroyed = true;
       if (removeClick) removeClick();
       try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (appRef.current as any)?.__styleObserver?.disconnect?.();
         appRef.current?.dispose?.();
         appRef.current = null;
@@ -100,30 +109,38 @@ const TubesCursor = ({
         // ignore
       }
     };
-  }, [initialColors, lightColors, lightIntensity, enableRandomizeOnClick]);
+  }, [initialColors, lightColors, lightIntensity, enableRandomizeOnClick, canvasOpacity]);
 
   return (
-    <div className={`relative ${height} w-screen overflow-hidden ${className}`}>
-      <canvas ref={canvasRef} className="absolute inset-0 block h-full w-full" />
+    <div className={`relative ${height} w-full overflow-hidden ${className}`}>
+      <canvas
+        ref={canvasRef}
+        className="absolute inset-0 block h-full w-full"
+        style={{ opacity: canvasOpacity }}
+      />
 
-      <div className="relative z-10 flex h-full w-full flex-col items-center justify-center gap-2 select-none">
-        <h1
-          className={`m-0 p-0 text-white font-bold uppercase leading-none drop-shadow-[0_0_20px_rgba(0,0,0,1)] ${titleSize}`}
-        >
-          {title}
-        </h1>
-        <h2
-          className={`m-0 p-0 text-white font-medium uppercase leading-none drop-shadow-[0_0_20px_rgba(0,0,0,1)] ${subtitleSize}`}
-        >
-          {subtitle}
-        </h2>
-        <p
-          className={`m-0 p-0 text-white/70 leading-none drop-shadow-[0_0_20px_rgba(0,0,0,1)] ${captionSize}`}
-        >
-          {caption}
-        </p>
-        {children && <div className="mt-6">{children}</div>}
-      </div>
+      {title || subtitle || caption ? (
+        <div className="relative z-10 flex h-full w-full flex-col items-center justify-center gap-2 select-none">
+          {title && (
+            <h1 className={`m-0 p-0 text-white font-bold uppercase leading-none drop-shadow-[0_0_20px_rgba(0,0,0,1)] ${titleSize}`}>
+              {title}
+            </h1>
+          )}
+          {subtitle && (
+            <h2 className={`m-0 p-0 text-white font-medium uppercase leading-none drop-shadow-[0_0_20px_rgba(0,0,0,1)] ${subtitleSize}`}>
+              {subtitle}
+            </h2>
+          )}
+          {caption && (
+            <p className={`m-0 p-0 text-white/70 leading-none drop-shadow-[0_0_20px_rgba(0,0,0,1)] ${captionSize}`}>
+              {caption}
+            </p>
+          )}
+          {children && <div className="mt-6">{children}</div>}
+        </div>
+      ) : (
+        children && <div className="relative z-10 h-full w-full">{children}</div>
+      )}
     </div>
   );
 };
