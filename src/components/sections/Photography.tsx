@@ -22,7 +22,7 @@ export function Photography() {
     <section id="photography" className="py-24 md:py-32 px-6 border-t border-white/[0.06]">
       <div className="max-w-6xl mx-auto">
         <SectionHeader
-          index="04"
+          index="05"
           kicker="Creative"
           title="Photography"
           lede="Outside of code, I shoot. Hover to explore, click to expand."

@@ -35,7 +35,7 @@ export function Contact() {
     <section id="contact" className="py-24 md:py-32 px-6 border-t border-white/[0.06]">
       <div className="max-w-4xl mx-auto">
         <SectionHeader
-          index="05"
+          index="06"
           kicker="Connect"
           title="Contact"
           lede="Open to SWE and security engineering roles for Summer/Fall 2026. Always happy to talk about interesting projects."

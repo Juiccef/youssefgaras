@@ -17,7 +17,7 @@ export function About() {
   return (
     <section id="about" className="py-24 md:py-32 px-6 border-t border-white/[0.06]">
       <div className="max-w-6xl mx-auto">
-        <SectionHeader index="03" kicker="Story" title="About" />
+        <SectionHeader index="04" kicker="Story" title="About" />
 
         <div className="grid md:grid-cols-[280px_1fr] gap-12 items-start">
           <BlurFade delay={0.1}>

@@ -2,6 +2,7 @@
 
 import { TubesCursor } from "@/components/ui/tube-cursor";
 import { Terminal } from "@/components/ui/Terminal";
+import { LiquidButton } from "@/components/ui/liquid-glass-button";
 
 export function Hero() {
   return (
@@ -12,6 +13,7 @@ export function Hero() {
         lightColors={["#4ade80", "#22d3ee", "#2dd4bf", "#00ff88"]}
         lightIntensity={140}
         canvasOpacity={0.55}
+        enableRandomizeOnClick
       >
         {/* Static glow — composes the center even if the WebGL script never loads */}
         <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[720px] max-w-full h-[420px] rounded-full bg-emerald-500/[0.07] blur-[120px]" />
@@ -30,19 +32,21 @@ export function Hero() {
             Cybersecurity Engineer · AI Systems · Network Defense
           </p>
 
-          <div className="mt-8 flex items-center justify-center gap-3">
-            <a
-              href="#projects"
-              className="inline-flex items-center h-11 px-7 rounded-full bg-emerald-500 text-[#04211a] text-sm font-semibold hover:bg-emerald-400 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/70"
+          <div className="mt-8 flex items-center justify-center gap-4">
+            <LiquidButton
+              size="lg"
+              className="text-white font-semibold"
+              onClick={() => document.getElementById("projects")?.scrollIntoView({ behavior: "smooth" })}
             >
               View Projects
-            </a>
-            <a
-              href="#contact"
-              className="inline-flex items-center h-11 px-7 rounded-full border border-white/15 text-sm font-medium text-white/85 hover:text-white hover:border-emerald-400/50 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/70"
+            </LiquidButton>
+            <LiquidButton
+              size="lg"
+              className="text-white/85 font-medium"
+              onClick={() => document.getElementById("contact")?.scrollIntoView({ behavior: "smooth" })}
             >
               Get in Touch
-            </a>
+            </LiquidButton>
           </div>
 
           <Terminal className="mt-12 max-w-2xl" />

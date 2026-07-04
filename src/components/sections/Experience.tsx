@@ -42,7 +42,7 @@ export function Experience() {
   return (
     <section id="experience" className="py-24 md:py-32 px-6 border-t border-white/[0.06]">
       <div className="max-w-6xl mx-auto">
-        <SectionHeader index="02" kicker="Background" title="Experience" />
+        <SectionHeader index="03" kicker="Background" title="Experience" />
 
         <div className="relative">
           <div className="absolute left-[180px] top-0 bottom-0 w-px bg-white/[0.06] hidden md:block" />

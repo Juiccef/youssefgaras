@@ -1,6 +1,7 @@
 import { Nav } from "@/components/Nav";
 import { Hero } from "@/components/sections/Hero";
 import { Projects } from "@/components/sections/Projects";
+import { Websites } from "@/components/sections/Websites";
 import { Experience } from "@/components/sections/Experience";
 import { About } from "@/components/sections/About";
 import { Photography } from "@/components/sections/Photography";
@@ -28,6 +29,7 @@ export default function Home() {
             <div className="absolute bottom-[20%] -left-10 w-[500px] h-[500px] rounded-full bg-emerald-400/10 blur-[100px]" />
           </div>
           <Projects />
+          <Websites />
           <Experience />
           <About />
           <Photography />

@@ -2,9 +2,11 @@
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Menu, X } from "lucide-react";
+import { LiquidButton } from "@/components/ui/liquid-glass-button";
 
 const links = [
   { href: "#projects", label: "Projects", id: "projects" },
+  { href: "#websites", label: "Websites", id: "websites" },
   { href: "#experience", label: "Experience", id: "experience" },
   { href: "#about", label: "About", id: "about" },
   { href: "#photography", label: "Photography", id: "photography" },
@@ -75,14 +77,13 @@ export function Nav() {
         </ul>
 
         <div className="flex items-center gap-3">
-          <a
-            href="/resume.pdf"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hidden sm:inline-flex items-center h-9 px-4 rounded-full border border-white/15 bg-white/[0.03] text-sm font-mono text-white/85 hover:text-white hover:border-emerald-500/40 transition-colors duration-200"
+          <LiquidButton
+            size="sm"
+            className="hidden sm:inline-flex text-white font-mono"
+            onClick={() => window.open("/resume.pdf", "_blank")}
           >
             Resume ↗
-          </a>
+          </LiquidButton>
 
           <button
             type="button"
