@@ -21,6 +21,7 @@ const HELP: [string, string][] = [
   ["certs", "show certifications"],
   ["contact", "how to reach me"],
   ["resume", "open my resume"],
+  ["reboot", "replay the boot intro"],
   ["clear", "clear the terminal"],
 ];
 
@@ -121,6 +122,16 @@ function respond(raw: string): ReactNode[] {
       return [<p key="o" className="text-white/60">navigating to {target}…</p>];
     }
     return [<p key="o" className="text-white/60">open: no such section: {target}</p>];
+  }
+
+  if (cmd === "reboot") {
+    try {
+      localStorage.removeItem("yg-boot");
+    } catch {
+      // ignore
+    }
+    setTimeout(() => window.location.reload(), 600);
+    return [<p key="rb" className="text-white/60">rebooting…</p>];
   }
 
   if (cmd.startsWith("sudo"))

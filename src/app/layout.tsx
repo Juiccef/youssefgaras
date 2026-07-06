@@ -27,8 +27,22 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
-      <body className="min-h-full bg-[#080808] text-[#f0f0f0]">{children}</body>
+      <body className="min-h-full bg-[#080808] text-[#f0f0f0]">
+        {/* Pre-hydration check: hide the boot intro instantly for repeat
+            visitors and reduced-motion users — no flash before React loads. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "try{if(localStorage.getItem('yg-boot')||matchMedia('(prefers-reduced-motion: reduce)').matches)document.documentElement.dataset.boot='seen'}catch(e){document.documentElement.dataset.boot='seen'}",
+          }}
+        />
+        <noscript>
+          <style>{`#boot-intro{display:none}`}</style>
+        </noscript>
+        {children}
+      </body>
     </html>
   );
 }

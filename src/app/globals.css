@@ -40,6 +40,26 @@ html {
   100% { transform: translateY(350%); opacity: 0; }
 }
 
+/* Boot intro — repeat visitors / reduced motion never see it (set
+   pre-hydration by the inline script in layout.tsx) */
+html[data-boot="seen"] #boot-intro {
+  display: none;
+}
+
+/* Boot intro exit — CRT power-off: collapse to a bright horizontal
+   line, then wink out */
+@keyframes crt-off {
+  0% { transform: scale(1, 1); opacity: 1; filter: brightness(1); }
+  55% { transform: scale(1, 0.008); opacity: 1; filter: brightness(2.4); }
+  85% { transform: scale(0.35, 0.004); opacity: 1; filter: brightness(3); }
+  100% { transform: scale(0.001, 0.002); opacity: 0; filter: brightness(3); }
+}
+
+@keyframes boot-caret {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
 .dot-grid {
   background-image: radial-gradient(circle, rgba(255,255,255,0.12) 1px, transparent 1px);
   background-size: 28px 28px;

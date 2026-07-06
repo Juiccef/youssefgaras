@@ -1,4 +1,5 @@
 import { Nav } from "@/components/Nav";
+import { BootIntro } from "@/components/ui/BootIntro";
 import { Hero } from "@/components/sections/Hero";
 import { Projects } from "@/components/sections/Projects";
 import { Websites } from "@/components/sections/Websites";
@@ -11,6 +12,7 @@ import { Footer } from "@/components/Footer";
 export default function Home() {
   return (
     <>
+      <BootIntro />
       <Nav />
       <main>
         <Hero />
