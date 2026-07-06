@@ -9,7 +9,7 @@ export function Hero() {
     <section id="hero" className="relative">
       <TubesCursor
         height="min-h-[100svh]"
-        initialColors={["#00d4aa", "#0d9488", "#4ade80"]}
+        initialColors={["#2563eb", "#0d9488", "#4ade80"]}
         lightColors={["#4ade80", "#22d3ee", "#2dd4bf", "#00ff88"]}
         lightIntensity={140}
         canvasOpacity={0.55}

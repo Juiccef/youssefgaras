@@ -10,11 +10,12 @@ const BOOT_LINES = [
   { tag: "[ ok ]", tagCls: "text-emerald-400", text: "credential check: CCNA ✓  (valid → 2029)" },
   { tag: "[ ok ]", tagCls: "text-emerald-400", text: "loading /projects (4)  /websites (1)  /experience (3)" },
   { tag: "[ ok ]", tagCls: "text-emerald-400", text: "mounting /about  /photography  /contact" },
+  { tag: "[ ok ]", tagCls: "text-emerald-400", text: "spinning up WebGL renderer" },
   { tag: "[ sec ]", tagCls: "text-teal-300", text: "intrusion countermeasures: active" },
 ] as const;
 
 /**
- * First-visit cinematic boot screen. Auto-plays a ~3s terminal boot
+ * First-visit cinematic boot screen. Auto-plays a ~5.5s terminal boot
  * sequence, then collapses CRT-style into the site. Any key / tap / the
  * skip button fast-forwards. Remembered in localStorage; users with
  * prefers-reduced-motion never see it. A pre-hydration script in
@@ -70,19 +71,19 @@ export function BootIntro() {
     };
 
     // ── Timeline ──────────────────────────────────────────────
-    let t = 380;
+    let t = 450;
     for (let i = 1; i <= CMD.length; i++) {
       schedule(() => setTyped(i), t);
-      t += 22;
+      t += 28;
     }
-    t += 260;
+    t += 420;
     BOOT_LINES.forEach((_, j) => {
       schedule(() => setShown(j + 1), t);
-      t += 235;
+      t += 340;
     });
-    t += 120;
+    t += 220;
     schedule(() => setGranted(true), t);
-    t += 800;
+    t += 1200;
     schedule(startExit, t);
 
     // ── Skip: any key, tap, or click ──────────────────────────
@@ -112,8 +113,6 @@ export function BootIntro() {
         exiting ? "motion-safe:animate-[crt-off_0.52s_ease-in_forwards]" : ""
       }`}
     >
-      {/* Ambient glow */}
-      <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[640px] max-w-full h-[380px] rounded-full bg-emerald-500/[0.08] blur-[110px]" />
       {/* Scanlines */}
       <div
         className="pointer-events-none absolute inset-0 opacity-[0.05]"
@@ -126,7 +125,7 @@ export function BootIntro() {
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_55%,rgba(0,0,0,0.55)_100%)]" />
 
       {/* Terminal window */}
-      <div className="relative w-full max-w-2xl rounded-xl border border-white/10 bg-[#0a0d0c]/95 shadow-[0_0_90px_-25px_rgba(16,185,129,0.35),0_30px_60px_-30px_rgba(0,0,0,0.9)] overflow-hidden">
+      <div className="relative w-full max-w-2xl rounded-xl border border-white/10 bg-[#0a0d0c]/95 shadow-[0_30px_70px_-25px_rgba(0,0,0,0.9)] overflow-hidden">
         <div className="flex items-center gap-2 px-4 h-9 border-b border-white/[0.06] bg-white/[0.02]">
           <span className="w-2.5 h-2.5 rounded-full bg-white/10" />
           <span className="w-2.5 h-2.5 rounded-full bg-white/10" />
@@ -155,7 +154,7 @@ export function BootIntro() {
           ))}
 
           {granted && (
-            <p className="mt-2 text-emerald-300 drop-shadow-[0_0_10px_rgba(52,211,153,0.45)]">
+            <p className="mt-2 text-emerald-300">
               &gt; access granted — welcome, guest.
             </p>
           )}
