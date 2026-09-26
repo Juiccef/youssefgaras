@@ -7,7 +7,7 @@ const links = [
   {
     icon: GithubIcon,
     label: "GitHub",
-    href: "https://github.com/Juicce",
+    href: "https://github.com/Juiccef",
     handle: "@Juiccef",
   },
   {

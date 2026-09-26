@@ -80,7 +80,7 @@ function respond(raw: string): ReactNode[] {
         <span className="text-emerald-300">[✓]</span> CCNA — Cisco Certified Network Associate (valid → 2029)
       </p>,
       <p key="2" className="text-white/75">
-        <span className="text-white/45">[…]</span> CompTIA Security+ — in progress
+        <span className="text-emerald-300">[✓]</span> CompTIA Security+
       </p>,
       <p key="3" className="text-white/75">
         <span className="text-emerald-300">[✓]</span> Google UX Design
@@ -103,7 +103,7 @@ function respond(raw: string): ReactNode[] {
       </p>,
       <p key="g">
         <span className="text-white/60">github{"    "}</span>
-        <a href="https://github.com/Juicce" target="_blank" rel="noopener noreferrer" className="text-emerald-300 underline underline-offset-4 decoration-emerald-500/40 hover:decoration-emerald-300">
+        <a href="https://github.com/Juiccef" target="_blank" rel="noopener noreferrer" className="text-emerald-300 underline underline-offset-4 decoration-emerald-500/40 hover:decoration-emerald-300">
           @Juicce
         </a>
       </p>,

@@ -11,7 +11,7 @@ const navLinks = [
 ];
 
 const socialLinks = [
-  { icon: GithubIcon, href: "https://github.com/Juicce", label: "Juiccef" },
+  { icon: GithubIcon, href: "https://github.com/Juiccef", label: "Juiccef" },
   { icon: LinkedinIcon, href: "https://www.linkedin.com/in/youssef-garas/", label: "LinkedIn" },
   { icon: InstagramIcon, href: "https://www.instagram.com/y.gpics/", label: "Instagram" },
   { icon: Mail, href: "mailto:youssefgaras@gmail.com", label: "Email" },
@@ -25,7 +25,7 @@ export function Footer() {
           <div>
             <p className="font-mono text-emerald-400 font-bold text-sm mb-3">YG</p>
             <p className="text-white/60 text-sm leading-relaxed max-w-[220px]">
-              Cybersecurity engineer & CS student at Georgia State. CCNA certified, pursuing Security+. Open to security and SWE roles starting Summer 2026.
+              Cybersecurity engineer & CS student at Georgia State. CCNA and Security+ certified. Open to security and SWE roles starting Summer 2026.
             </p>
           </div>
 

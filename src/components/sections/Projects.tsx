@@ -36,7 +36,7 @@ const projects: Project[] = [
     description:
       "Real-time voice-interaction system combining speech recognition with TensorFlow LSTM pipelines for sequence prediction. Explores adversarial input handling and model robustness under noisy conditions.",
     stack: ["Python", "TensorFlow", "LSTM", "NLP"],
-    link: "https://github.com/Juicce",
+    link: "https://github.com/Juiccef",
     // PLACEHOLDER — drop a screenshot at /public/previews/word-prediction.png
     // and set:  preview: "/previews/word-prediction.png"
     preview: null,
