@@ -2,16 +2,17 @@ import { BlurFade } from "@/components/ui/BlurFade";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { ExternalLink, BadgeCheck } from "lucide-react";
 import Image from "next/image";
+import { CERTS } from "@/lib/content";
+
+// Certificates with a scan and a verification code get featured under the bio
+const FEATURED = CERTS.filter((c) => "verify" in c);
 
 const skills = {
   Languages: ["Python", "C", "JavaScript", "Java", "SQL", "R"],
   Stack: ["React", "Node.js", "OpenCV", "TensorFlow", "Pinecone", "Wireshark"],
-  Certifications: ["CCNA", "Security+ (in progress)", "Google UX Design"],
+  Certifications: ["CCNA", "Security+", "Google UX Design", "CodePath Web Dev"],
 };
 
-// Printed on the certificate — recruiters can verify authenticity at Cisco.
-const CCNA_VERIFY_URL = "https://www.cisco.com/go/verifycertificate";
-const CCNA_VERIFICATION_NO = "3d725c9f4c5c455ab40b655434254ed0";
 
 export function About() {
   return (
@@ -41,21 +42,23 @@ export function About() {
             <div className="space-y-8">
               <div className="space-y-5 text-white/70 leading-relaxed text-[1.05rem] max-w-2xl">
                 <p>
-                  I&apos;m a Computer Science student at Georgia State University concentrating in
-                  Cybersecurity, graduating May 2026. Security isn&apos;t a track I fell into — it&apos;s
-                  what I&apos;ve been building toward: I hold a CCNA certification and am actively
-                  pursuing Security+ to deepen my foundation in network defense and threat analysis.
+                  I graduated from Georgia State University in 2026 with a B.S. in Computer Science,
+                  concentrating in Cybersecurity. Security isn&apos;t a track I fell into — it&apos;s what
+                  I&apos;ve been building toward: I hold CCNA and CompTIA Security+, giving me a solid
+                  foundation in network defense and threat analysis, and I&apos;m now an endpoint intern
+                  at McKenney&apos;s.
                 </p>
                 <p>
                   I&apos;m drawn to the intersection of AI and security — building systems that are both
-                  intelligent and hard to break. Outside of code, I serve as Technical Director for a
-                  live international TV broadcast reaching millions of viewers across the Middle East,
-                  a role that sharpened my ability to operate under zero-error pressure. I speak
-                  Arabic, German, and English.
+                  intelligent and hard to break — and I use AI every day: I run an independent e-commerce
+                  store with Claude and MCP connectors handling its social content, product content and
+                  inbox. I also spent nearly four years as Technical Director for a live international TV
+                  broadcast reaching millions of viewers across the Middle East, which taught me to work
+                  under zero-error pressure. I speak Arabic, German, and English.
                 </p>
                 <p>
-                  I&apos;m actively looking for security engineering or SWE roles starting Summer/Fall 2026.
-                  If you&apos;re building something that needs to be both smart and secure, I&apos;d love to talk.
+                  I&apos;m looking for security engineering and software roles. If you&apos;re building
+                  something that needs to be both smart and secure, I&apos;d love to talk.
                 </p>
               </div>
 
@@ -71,7 +74,7 @@ export function About() {
                           key={item}
                           className={
                             category === "Certifications"
-                              ? "text-xs px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-300"
+                              ? "text-xs px-2.5 py-1 rounded-lg bg-putty/10 border border-putty/20 text-putty"
                               : "text-xs px-2.5 py-1 rounded-lg bg-white/[0.04] border border-white/10 text-white/75"
                           }
                         >
@@ -83,56 +86,52 @@ export function About() {
                 ))}
               </div>
 
-              {/* Featured credential — CCNA */}
-              <div className="flex flex-col sm:flex-row gap-5 sm:items-center rounded-xl border border-emerald-500/20 bg-emerald-500/[0.04] p-5">
-                <a
-                  href="/certs/ccna.pdf"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="relative block w-40 shrink-0 rounded-lg overflow-hidden border border-white/10 hover:border-emerald-500/40 transition-colors"
-                  aria-label="Open CCNA certificate (PDF)"
-                >
-                  <Image
-                    src="/certs/ccna-thumb.png"
-                    alt="CCNA certificate thumbnail"
-                    width={320}
-                    height={247}
-                    className="w-full h-auto"
-                  />
-                </a>
-                <div className="min-w-0">
-                  <p className="flex items-center gap-1.5 text-emerald-400 text-xs font-mono tracking-[0.2em] uppercase mb-1.5">
-                    <BadgeCheck className="w-3.5 h-3.5" aria-hidden />
-                    Featured credential
-                  </p>
-                  <p className="text-white font-semibold leading-snug">
-                    Cisco Certified Network Associate (CCNA)
-                  </p>
-                  <p className="text-white/60 text-sm mt-1">
-                    Issued Jun 2026 · Valid through Jun 2029
-                  </p>
-                  <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 mt-3">
+              {/* Featured credentials: the certificates with a verification code */}
+              <div className="grid gap-4 lg:grid-cols-2">
+                {FEATURED.map((c) => (
+                  <div key={c.id} className="flex flex-col gap-4 rounded-xl border border-putty/20 bg-putty/[0.04] p-5 sm:flex-row sm:items-center">
                     <a
-                      href="/certs/ccna.pdf"
+                      href={c.file}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 text-sm text-emerald-300 hover:text-emerald-200 transition-colors"
+                      className="relative block w-36 shrink-0 overflow-hidden rounded-lg border border-white/10 transition-colors hover:border-putty/40"
+                      aria-label={`Open ${c.name} certificate (PDF)`}
                     >
-                      View certificate <ExternalLink size={13} aria-hidden />
+                      <Image src={c.thumb} alt={`${c.name} certificate thumbnail`} width={320} height={247} className="h-auto w-full" />
                     </a>
-                    <a
-                      href={CCNA_VERIFY_URL}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 text-sm text-emerald-300 hover:text-emerald-200 transition-colors"
-                    >
-                      Verify with Cisco <ExternalLink size={13} aria-hidden />
-                    </a>
+                    <div className="min-w-0">
+                      <p className="mb-1.5 flex items-center gap-1.5 font-mono text-xs uppercase tracking-[0.2em] text-putty">
+                        <BadgeCheck className="h-3.5 w-3.5" aria-hidden />
+                        Verified
+                      </p>
+                      <p className="font-semibold leading-snug text-white">{c.full}</p>
+                      <p className="mt-1 text-sm text-white/60">
+                        Issued {c.issued} · Valid through {c.validThrough}
+                      </p>
+                      <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1.5">
+                        <a
+                          href={c.file}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 text-sm text-putty transition-colors hover:text-white"
+                        >
+                          Certificate <ExternalLink size={13} aria-hidden />
+                        </a>
+                        <a
+                          href={c.verify.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 text-sm text-putty transition-colors hover:text-white"
+                        >
+                          Verify with {c.issuer} <ExternalLink size={13} aria-hidden />
+                        </a>
+                      </div>
+                      <p className="mt-2 truncate font-mono text-[11px] text-white/55" title={c.verify.code}>
+                        code {c.verify.code}
+                      </p>
+                    </div>
                   </div>
-                  <p className="text-white/55 text-[11px] font-mono mt-2 truncate">
-                    verification no. {CCNA_VERIFICATION_NO}
-                  </p>
-                </div>
+                ))}
               </div>
             </div>
           </BlurFade>

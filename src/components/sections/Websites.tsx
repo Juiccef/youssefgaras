@@ -2,29 +2,9 @@ import { BlurFade } from "@/components/ui/BlurFade";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { ArrowUpRight, Globe } from "lucide-react";
 import Image from "next/image";
+import { SITES } from "@/lib/content";
 
-type Site = {
-  name: string;
-  category: string;
-  url: string;
-  displayUrl: string;
-  description: string;
-  tags: string[];
-  preview: string;
-};
-
-const sites: Site[] = [
-  {
-    name: "Peach Parking Solutions",
-    category: "Valet & Parking · Atlanta, GA",
-    url: "https://www.peachparkingsolutions.com/",
-    displayUrl: "peachparkingsolutions.com",
-    description:
-      "Design-and-build marketing site for an Atlanta valet company — a bold photo-led hero, service breakdown, and a quote-request flow built to turn event planners and venues into booked clients.",
-    tags: ["Web Design", "Responsive", "SEO", "Lead Capture"],
-    preview: "/previews/peach-parking.jpg",
-  },
-];
+const sites = SITES;
 
 export function Websites() {
   return (
@@ -44,7 +24,7 @@ export function Websites() {
                 href={site.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group block rounded-2xl border border-white/10 bg-[#0f0f0f] overflow-hidden transition-colors duration-300 hover:border-emerald-500/30"
+                className="group block rounded-2xl border border-white/10 bg-[#0f0f0f] overflow-hidden transition-colors duration-300 hover:border-putty/30"
               >
                 <div className="grid md:grid-cols-2">
                   {/* Browser-framed preview */}
@@ -72,7 +52,7 @@ export function Websites() {
 
                   {/* Details */}
                   <div className="flex flex-col justify-center p-6 md:p-8 md:pl-2">
-                    <div className="flex items-center gap-2 text-emerald-400 text-xs font-mono tracking-[0.18em] uppercase mb-3">
+                    <div className="flex items-center gap-2 text-putty text-xs font-mono tracking-[0.18em] uppercase mb-3">
                       <Globe className="w-3.5 h-3.5" aria-hidden />
                       Live site
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
@@ -96,7 +76,7 @@ export function Websites() {
                       ))}
                     </div>
 
-                    <span className="inline-flex items-center gap-1.5 text-sm font-medium text-emerald-300 mt-6 group-hover:gap-2.5 transition-all">
+                    <span className="inline-flex items-center gap-1.5 text-sm font-medium text-putty mt-6 group-hover:gap-2.5 transition-all">
                       Visit site
                       <ArrowUpRight size={16} className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                     </span>

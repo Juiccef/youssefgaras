@@ -23,9 +23,11 @@ export function Footer() {
       <div className="max-w-6xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-12">
           <div>
-            <p className="font-mono text-emerald-400 font-bold text-sm mb-3">YG</p>
+            <a href="#hero" aria-label="Back to top" className="key key-sm key-icon mb-4 text-[12px] font-bold tracking-tight">
+              YG
+            </a>
             <p className="text-white/60 text-sm leading-relaxed max-w-[220px]">
-              Cybersecurity engineer & CS student at Georgia State. CCNA and Security+ certified. Open to security and SWE roles starting Summer 2026.
+              Cybersecurity engineer and Georgia State CS grad. CCNA and Security+ certified. Open to security and software roles.
             </p>
           </div>
 
@@ -53,7 +55,7 @@ export function Footer() {
                     rel="noopener noreferrer"
                     className="flex items-center gap-2.5 text-white/60 hover:text-white text-sm transition-colors group"
                   >
-                    <Icon className="w-4 h-4 group-hover:text-emerald-400 transition-colors shrink-0" />
+                    <Icon className="w-4 h-4 group-hover:text-putty transition-colors shrink-0" />
                     {label}
                   </a>
                 </li>

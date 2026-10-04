@@ -32,7 +32,7 @@ const PROJECTS = [
   ["ufc-rsvp/", "event RSVP site — hardened forms"],
 ];
 
-function respond(raw: string): ReactNode[] {
+export function respond(raw: string): ReactNode[] {
   const cmd = raw.trim().toLowerCase().replace(/\s+/g, " ");
 
   if (cmd === "help")
@@ -104,7 +104,7 @@ function respond(raw: string): ReactNode[] {
       <p key="g">
         <span className="text-white/60">github{"    "}</span>
         <a href="https://github.com/Juiccef" target="_blank" rel="noopener noreferrer" className="text-emerald-300 underline underline-offset-4 decoration-emerald-500/40 hover:decoration-emerald-300">
-          @Juicce
+          @Juiccef
         </a>
       </p>,
     ];

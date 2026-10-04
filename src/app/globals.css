@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Homelab hero: headline beside the room on wide screens (keep in sync with SIDE_MQ in LabHero) */
+@custom-variant side (@media (min-width: 640px) and (min-aspect-ratio: 5/4));
+
 :root {
   --background: #080808;
   --foreground: #f0f0f0;
@@ -11,6 +14,8 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --animate-gradient: gradient 4s linear infinite;
+  /* the site accent: the putty of the CRT keyboard (replaces the old green) */
+  --color-putty: #e6d9b5;
 }
 
 @keyframes gradient {
@@ -30,7 +35,41 @@ html {
 }
 
 ::selection {
-  background: rgba(16, 185, 129, 0.35);
+  background: rgba(230, 217, 181, 0.3);
+}
+
+/* ── Night sky over the classic sections (NightSky.tsx) ─────────────── */
+.sky-twinkle { animation: sky-twinkle 4s ease-in-out infinite; }
+.sky-blink { animation: sky-blink 2.2s linear infinite; }
+.sky-drift-east { animation: sky-drift-east 110s linear infinite; }
+.sky-drift-west { animation: sky-drift-west 140s linear infinite; }
+.sky-shoot { opacity: 0; animation: sky-shoot 17s ease-out infinite; }
+
+@keyframes sky-twinkle {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+@keyframes sky-blink {
+  0%, 86%, 100% { opacity: 0.12; }
+  89%, 95% { opacity: 1; }
+}
+@keyframes sky-drift-east {
+  from { transform: translate3d(-6vw, 0, 0); }
+  to { transform: translate3d(106vw, -14vh, 0); }
+}
+@keyframes sky-drift-west {
+  from { transform: translate3d(106vw, 0, 0); }
+  to { transform: translate3d(-6vw, 9vh, 0); }
+}
+@keyframes sky-shoot {
+  0% { opacity: 0; transform: translateX(0); }
+  1.2% { opacity: 1; }
+  6% { opacity: 0; transform: translateX(-300px); }
+  100% { opacity: 0; transform: translateX(-300px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sky-moving { display: none; }
+  .sky-twinkle, .sky-blink { animation: none; }
 }
 
 /* Hero scroll cue — a short segment sliding down a hairline track */
@@ -58,6 +97,327 @@ html[data-boot="seen"] #boot-intro {
 @keyframes boot-caret {
   0%, 49% { opacity: 1; }
   50%, 100% { opacity: 0; }
+}
+
+/* ── Homelab hero (preview) ─────────────────────────────────────────── */
+.lab-mono {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+}
+
+/* LED behaviours — durations/delays are randomised per LED inline */
+.lab-led-act { animation: lab-act 1.2s steps(1, end) infinite; }
+.lab-led-disk { animation: lab-disk 3s steps(1, end) infinite; }
+.lab-led-pulse { animation: lab-pulse 3.2s ease-in-out infinite; }
+
+@keyframes lab-act {
+  0% { opacity: 1; }
+  8% { opacity: 0.15; }
+  13% { opacity: 1; }
+  36% { opacity: 0.2; }
+  40% { opacity: 1; }
+  61% { opacity: 0.1; }
+  65% { opacity: 1; }
+  71% { opacity: 0.3; }
+  75% { opacity: 1; }
+}
+
+@keyframes lab-disk {
+  0%, 100% { opacity: 0.12; }
+  4% { opacity: 1; }
+  7% { opacity: 0.2; }
+  10% { opacity: 1; }
+  13% { opacity: 0.12; }
+  52% { opacity: 0.12; }
+  55% { opacity: 1; }
+  58% { opacity: 0.3; }
+  61% { opacity: 1; }
+  64% { opacity: 0.12; }
+}
+
+@keyframes lab-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+@keyframes lab-fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes lab-caret {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+/* Preview start screen: only the terminal on black. The nav fades in once
+   the lab is live. */
+header {
+  transition: opacity 0.6s ease;
+}
+html[data-lab-intro] header,
+html[data-lab-focus] header,
+html[data-lab-zoomed] header {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Room or Classic (view.ts, set before the first paint by intro-gate.ts).
+   Room: the room is the whole page, no scrolling, and scrolling the wheel
+   zooms the room instead. Classic: the scrolling portfolio, no room. */
+html[data-view="classic"] #hero,
+html[data-view="room"] #hero ~ *,
+html[data-view="room"] [data-classic] {
+  display: none;
+}
+html[data-view="room"],
+html[data-view="room"] body {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+html[data-view="room"] #hero {
+  height: 100svh;
+  touch-action: none;
+}
+
+/* Start screen: just the terminal. No scrolling, and the sections below the
+   hero don't exist (hidden also takes them out of the tab order) until the
+   lab is powered on. */
+html[data-lab-intro],
+html[data-lab-intro] body {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+html[data-lab-intro] #hero ~ *,
+html[data-lab-intro] footer {
+  visibility: hidden;
+}
+
+/* Inside the room (stepped in or zoomed in): drag to look around */
+html[data-lab-zoomed] #hero {
+  cursor: grab;
+}
+html[data-lab-zoomed] #hero[data-dragging] {
+  cursor: grabbing;
+}
+
+/* Clickable parts of the real homelab */
+.lab-hot {
+  fill: transparent;
+  stroke: transparent;
+  stroke-width: 1.4;
+  stroke-linejoin: round;
+  cursor: pointer;
+  pointer-events: all;
+  outline: none;
+  transition: fill 0.2s, stroke 0.2s;
+}
+.lab-hot:hover,
+.lab-hot:focus-visible,
+.lab-hot[data-active] {
+  fill: rgba(230, 217, 181, 0.1);
+  stroke: rgba(230, 217, 181, 0.9);
+}
+.lab-hot[data-hot="rack"]:hover,
+.lab-hot[data-hot="rack"][data-active] {
+  fill: rgba(230, 217, 181, 0.03);
+}
+[data-hotspots="off"] .lab-hot {
+  pointer-events: none;
+}
+
+/* "You can click this": a putty dot on a dark disc that breathes, with a
+   slow ping (hints.tsx). The delay is staggered per marker on .lab-mk. */
+.lab-mk-back {
+  fill: rgba(6, 7, 8, 0.62);
+  stroke: rgba(230, 217, 181, 0.5);
+  stroke-width: 0.9;
+}
+.lab-mk-dot {
+  fill: #e6d9b5;
+  animation: lab-mk-breathe 2.8s ease-in-out infinite;
+  animation-delay: inherit;
+}
+.lab-mk-ring {
+  fill: none;
+  stroke: #e6d9b5;
+  stroke-width: 1;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: lab-mk-ping 2.8s ease-out infinite;
+  animation-delay: inherit;
+}
+@keyframes lab-mk-breathe {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+@keyframes lab-mk-ping {
+  0% { transform: scale(1); opacity: 0; }
+  12% { opacity: 0.6; }
+  75%, 100% { transform: scale(2.1); opacity: 0; }
+}
+
+/* The label over whatever you're pointing at (LabHero positions it) */
+.lab-tip {
+  opacity: 0;
+  transform: translate(-50%, calc(-100% - 6px));
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+.lab-tip[data-on] {
+  opacity: 1;
+  transform: translate(-50%, calc(-100% - 10px));
+}
+.lab-tip[data-below] {
+  transform: translate(-50%, 6px);
+}
+.lab-tip[data-below][data-on] {
+  transform: translate(-50%, 10px);
+}
+
+/* Record player: the vinyl turns at 33⅓ rpm; notes drift up while music plays */
+.lab-spin {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: lab-spin 1.8s linear infinite;
+}
+@keyframes lab-spin {
+  to { transform: rotate(360deg); }
+}
+/* the record in the close-up: same turn, phase-synced to the room's by LabHero */
+.lab-disc-spin {
+  animation: lab-spin 1.8s linear infinite;
+}
+.lab-note { opacity: 0; }
+html[data-lab-music] .lab-note { animation: lab-note 2.6s ease-out infinite; }
+@keyframes lab-note {
+  0% { opacity: 0; transform: translate(0, 0); }
+  18% { opacity: 0.9; }
+  100% { opacity: 0; transform: translate(7px, -28px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lab-led-act, .lab-led-disk, .lab-led-pulse, .lab-spin, .lab-disc-spin, .lab-mk-dot { animation: none; }
+  .lab-mk-ring { display: none; }
+  .lab-tip, .lab-tip[data-on] { transition: none; }
+  html[data-lab-music] .lab-note { animation: none; opacity: 0.8; }
+}
+
+/* ── Keycap buttons ────────────────────────────────────────────────────
+   Dark keycap by default, .key-light is the putty keycap from the CRT
+   keyboard (primary action). They lift on hover and press down on click;
+   aria-pressed keeps a key held down (selected tab). .key-legend is the small
+   shortcut printed in the corner of the cap. */
+@layer components {
+  .key {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    height: 2.75rem;
+    padding: 0 1.25rem;
+    border-radius: 8px;
+    font-family: var(--font-geist-mono), ui-monospace, monospace;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    user-select: none;
+    color: rgba(255, 255, 255, 0.86);
+    background: linear-gradient(180deg, #2c3035, #1c1f23);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 3px 0 #0a0b0d, 0 6px 14px rgba(0, 0, 0, 0.55);
+    transition: transform 0.1s ease, box-shadow 0.1s ease, color 0.15s ease;
+  }
+  .key:hover {
+    color: #fff;
+    transform: translateY(-1px);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 4px 0 #0a0b0d, 0 8px 18px rgba(0, 0, 0, 0.55);
+  }
+  .key:active,
+  .key[aria-pressed="true"] {
+    transform: translateY(3px);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 0 0 #0a0b0d, 0 1px 3px rgba(0, 0, 0, 0.5);
+  }
+  .key:disabled {
+    opacity: 0.35;
+    pointer-events: none;
+  }
+  .key:focus-visible {
+    outline: 2px solid rgba(239, 232, 212, 0.7);
+    outline-offset: 3px;
+  }
+
+  .key-light {
+    color: #2a2620;
+    background: linear-gradient(180deg, #efe8d4, #d4cab1);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 3px 0 #9a8f77, 0 6px 14px rgba(0, 0, 0, 0.55);
+  }
+  .key-light:hover {
+    color: #1a1712;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 4px 0 #9a8f77, 0 8px 18px rgba(0, 0, 0, 0.55);
+  }
+  .key-light:active,
+  .key-light[aria-pressed="true"] {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 0 0 #9a8f77, 0 1px 3px rgba(0, 0, 0, 0.5);
+  }
+
+  .key-sm {
+    height: 2.25rem;
+    padding: 0 0.85rem;
+    border-radius: 7px;
+    font-size: 12px;
+  }
+  .key-xs {
+    height: 1.75rem;
+    padding: 0 0.6rem;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .key-icon {
+    width: 2.25rem;
+    padding: 0;
+  }
+
+  /* A key that wants to be noticed (the room's "step inside"): a putty
+     outline, and a second one that slowly pings off it */
+  .key-beacon::before,
+  .key-beacon::after {
+    content: "";
+    position: absolute;
+    inset: -4px;
+    border-radius: 11px;
+    border: 1px solid rgba(230, 217, 181, 0.4);
+    pointer-events: none;
+  }
+  .key-beacon::after {
+    border-color: rgba(230, 217, 181, 0.85);
+    animation: key-beacon 2.8s ease-out infinite;
+  }
+
+  .key-legend {
+    position: absolute;
+    top: 3px;
+    right: 6px;
+    font-size: 9px;
+    font-weight: 400;
+    line-height: 1;
+    opacity: 0.5;
+  }
+}
+
+@keyframes key-beacon {
+  0% { transform: scale(1); opacity: 0; }
+  12% { opacity: 0.8; }
+  70%, 100% { transform: scale(1.09, 1.34); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .key-beacon::after { animation: none; opacity: 0; }
+  .key,
+  .key:hover,
+  .key:active {
+    transition: none;
+    transform: none;
+  }
 }
 
 .dot-grid {

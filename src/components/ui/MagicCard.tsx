@@ -26,12 +26,12 @@ export function MagicCard({ children, className }: MagicCardProps) {
       onMouseLeave={() => setIsHovered(false)}
       className={cn(
         "relative overflow-hidden rounded-xl border border-white/10 p-6 transition-colors duration-300",
-        isHovered ? "border-emerald-500/30" : "",
+        isHovered ? "border-putty/30" : "",
         className
       )}
       style={{
         background: isHovered
-          ? `radial-gradient(350px circle at ${position.x}px ${position.y}px, rgba(16,185,129,0.10), transparent 70%), #0f0f0f`
+          ? `radial-gradient(350px circle at ${position.x}px ${position.y}px, rgba(230,217,181,0.07), transparent 70%), #0f0f0f`
           : "#0f0f0f",
       }}
     >

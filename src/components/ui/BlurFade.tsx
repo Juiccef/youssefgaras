@@ -12,18 +12,18 @@ interface BlurFadeProps {
 // to paint when a WebGL canvas is on the page (cards stayed invisible,
 // leaving a big void after the Projects grid).
 export function BlurFade({ children, className, delay = 0 }: BlurFadeProps) {
+  // Always render the same element: the server can't know the user's motion
+  // preference, and swapping to a plain <div> on the client caused a
+  // hydration mismatch that left the SSR `opacity: 0` stuck on the section.
+  // Reduced motion just makes the reveal instant.
   const reduceMotion = useReducedMotion();
-
-  if (reduceMotion) {
-    return <div className={className}>{children}</div>;
-  }
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 14 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.15 }}
-      transition={{ duration: 0.5, delay, ease: "easeOut" }}
+      transition={reduceMotion ? { duration: 0 } : { duration: 0.5, delay, ease: "easeOut" }}
       className={className}
     >
       {children}
