@@ -6,6 +6,12 @@
 :root {
   --background: #080808;
   --foreground: #f0f0f0;
+  /* City lights: the classic view's colours. Each section takes one
+     (data-sec on the <section>). */
+  --signal: #3ecbff; /* a screen's cyan */
+  --dusk: #a58bff; /* violet */
+  --beacon: #ff5a87; /* the rose of an aircraft warning light */
+  --sodium: #ff9d3c; /* streetlight orange */
 }
 
 @theme inline {
@@ -13,9 +19,16 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-archivo);
   --animate-gradient: gradient 4s linear infinite;
   /* the site accent: the putty of the CRT keyboard (replaces the old green) */
   --color-putty: #e6d9b5;
+  --color-signal: var(--signal);
+  --color-dusk: var(--dusk);
+  --color-beacon: var(--beacon);
+  --color-sodium: var(--sodium);
+  /* the colour of the section you're in (putty where there is none) */
+  --color-sec: var(--sec, #e6d9b5);
 }
 
 @keyframes gradient {
@@ -70,6 +83,187 @@ html {
 @media (prefers-reduced-motion: reduce) {
   .sky-moving { display: none; }
   .sky-twinkle, .sky-blink { animation: none; }
+}
+
+/* ── Sky parallax ──────────────────────────────────────────────────────
+   SkyMotion.tsx writes three numbers on every [data-sky-vars] element:
+   --px / --py, where the mouse is (-1…1 from the middle of the window,
+   eased), and --sy, how far the page has scrolled (px). Each layer turns
+   them into a shift of its own: --d is how many px it moves against the
+   mouse (nearer things move more), --s how much of the scroll it follows.
+   It's the `translate` property, so layers that already animate `transform`
+   (the satellites) keep doing so; don't put a Tailwind translate-* utility on
+   the same element. */
+.par,
+.par-wrap,
+.par-x {
+  will-change: transform;
+}
+.par {
+  translate: calc(var(--px, 0) * var(--d, 10) * -1px)
+    calc(var(--py, 0) * var(--d, 10) * -1px - var(--sy, 0) * var(--s, 0) * 1px);
+}
+/* tiled layers: the scroll shift wraps at one tile (--wrap), so it never runs out */
+.par-wrap {
+  translate: calc(var(--px, 0) * var(--d, 10) * -1px)
+    calc(var(--py, 0) * var(--d, 10) * -1px - mod(var(--sy, 0) * var(--s, 0) * 1px, var(--wrap)));
+}
+/* older browsers without mod(): follow the mouse only */
+@supports not (translate: 0 mod(10px, 3px)) {
+  .par-wrap {
+    translate: calc(var(--px, 0) * var(--d, 10) * -1px) calc(var(--py, 0) * var(--d, 10) * -1px);
+  }
+}
+/* the skyline only slides sideways: the ground stays put */
+.par-x {
+  translate: calc(var(--px, 0) * var(--d, 10) * -1px) 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .par, .par-wrap, .par-x { translate: none; }
+}
+
+/* ── Display type: Archivo, narrow and black ───────────────────────── */
+.display {
+  font-family: var(--font-archivo), "Arial Narrow", system-ui, sans-serif;
+  font-stretch: 62%;
+  font-weight: 900;
+  text-transform: uppercase;
+  line-height: 0.9;
+}
+
+/* The name in the classic intro: two lines set to the same width. YOUSSEF is
+   the narrowest cut and GARAS a wider one (the font's width axis), and the
+   letters are spread to the exact width, so the block is a solid rectangle
+   at any size. 3.36 is the width of YOUSSEF in ems. */
+.name-block {
+  container-type: inline-size;
+  width: min(100%, 36rem, 52svh);
+}
+.name-line {
+  display: flex;
+  justify-content: space-between;
+  font-size: calc(100cqw / 3.36);
+  line-height: 0.86;
+  color: #f7f4ec;
+  /* a hard shadow in the sky's own colour gives the letters an edge against whatever is behind them */
+  text-shadow: 0.035em 0.045em 0 #05070d;
+}
+.name-line > span {
+  animation: name-in 0.7s cubic-bezier(0.2, 0.9, 0.25, 1) both;
+  animation-delay: calc(var(--i, 0) * 45ms + 150ms);
+}
+@keyframes name-in {
+  from { opacity: 0; transform: translateY(0.3em); }
+  to { opacity: 1; transform: none; }
+}
+/* that entrance is for arriving: not again each time you step back out of the room */
+html[data-been-inside] .name-line > span { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+  .name-line > span { animation: none; }
+}
+
+/* ── Classic sections ──────────────────────────────────────────────────
+   One colour each: data-sec on the <section> sets --sec, and the small
+   label over the title, the links and the cards' hover pick it up (text-sec,
+   border-sec, bg-sec …). The titles themselves stay plain. */
+[data-sec="signal"] { --sec: var(--signal); }
+[data-sec="dusk"] { --sec: var(--dusk); }
+[data-sec="beacon"] { --sec: var(--beacon); }
+[data-sec="sodium"] { --sec: var(--sodium); }
+
+.sec-title {
+  /* about 50px on a phone; 13vw keeps the longest title (PHOTOGRAPHY) on one line down to 320px */
+  font-size: clamp(2.6rem, 13vw, 5.5rem);
+  color: #f7f4ec;
+}
+
+/* Experience: a ticket. The dates are on a stub, torn along a dashed line
+   with a notch cut where the line meets each edge. On phones the stub runs
+   across the top; from tablets up it's down the left side. */
+.ticket {
+  --stub: 5.5rem;
+  --notch: 0.7rem;
+  --n1: 0px var(--stub);
+  --n2: 100% var(--stub);
+  display: grid;
+  grid-template-rows: var(--stub) 1fr;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1rem;
+  background: #0a0d19;
+  -webkit-mask-image: radial-gradient(circle var(--notch) at var(--n1), transparent 97%, #000),
+    radial-gradient(circle var(--notch) at var(--n2), transparent 97%, #000);
+  mask-image: radial-gradient(circle var(--notch) at var(--n1), transparent 97%, #000),
+    radial-gradient(circle var(--notch) at var(--n2), transparent 97%, #000);
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+}
+.ticket-stub {
+  border-bottom: 2px dashed color-mix(in srgb, var(--sec, #e6d9b5) 55%, transparent);
+  background: color-mix(in srgb, var(--sec, #e6d9b5) 9%, transparent);
+}
+@media (min-width: 768px) {
+  .ticket {
+    --stub: 13.5rem;
+    --n1: var(--stub) 0px;
+    --n2: var(--stub) 100%;
+    grid-template-rows: none;
+    grid-template-columns: var(--stub) 1fr;
+  }
+  .ticket-stub {
+    border-bottom: 0;
+    border-right: 2px dashed color-mix(in srgb, var(--sec, #e6d9b5) 55%, transparent);
+  }
+}
+/* the barcode printed on the stub */
+.ticket-bars {
+  height: 1.4rem;
+  opacity: 0.4;
+  background: repeating-linear-gradient(90deg, #fff 0 2px, transparent 2px 5px, #fff 5px 6px, transparent 6px 8px, #fff 8px 11px, transparent 11px 13px);
+}
+
+/* Photo row on phones: swipe sideways, no scrollbar */
+.no-scrollbar { scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
+/* ── The room in the page's intro (HeroRoom.tsx) ──────────────────────
+   A picture of the room: it floats, leans toward the mouse (--px / --py
+   from SkyMotion) and has a soft shadow on the "ground" under it. */
+.mini-room-tilt {
+  transform: perspective(1100px) rotateY(calc(var(--px, 0) * 7deg)) rotateX(calc(var(--py, 0) * -5deg));
+  will-change: transform;
+  /* whenever it appears it starts square-on and eases into its lean, so
+     stepping back out of the room lands exactly on it */
+  animation: mini-room-settle 0.7s ease-out;
+}
+@keyframes mini-room-settle {
+  from { transform: perspective(1100px) rotateY(0deg) rotateX(0deg); }
+}
+.mini-room-float { animation: mini-room-float 7s ease-in-out infinite; }
+@keyframes mini-room-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+.mini-room-shadow {
+  position: absolute;
+  left: 20%;
+  right: 20%;
+  bottom: 2.25rem;
+  height: 9%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(0, 0, 0, 0.6), transparent);
+  animation: mini-room-shadow 7s ease-in-out infinite;
+}
+@keyframes mini-room-shadow {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(0.9); opacity: 0.7; }
+}
+.mini-room .key { transition: transform 0.15s ease, box-shadow 0.15s ease; }
+.mini-room:hover .key { transform: translateY(-2px); }
+.mini-room:focus-visible { outline: 2px solid rgba(239, 232, 212, 0.7); outline-offset: 6px; border-radius: 12px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .mini-room-float, .mini-room-shadow, .mini-room-tilt { animation: none; }
+  .mini-room-tilt { transform: none; }
 }
 
 /* Hero scroll cue — a short segment sliding down a hairline track */
@@ -161,12 +355,35 @@ html[data-lab-zoomed] header {
   pointer-events: none;
 }
 
-/* Room or Classic (view.ts, set before the first paint by intro-gate.ts).
-   Room: the room is the whole page, no scrolling, and scrolling the wheel
-   zooms the room instead. Classic: the scrolling portfolio, no room. */
+/* The room or the page (view.ts, set before the first paint by intro-gate.ts).
+   Room: the room is the whole screen, no scrolling, and scrolling the wheel
+   zooms the room instead. Classic: the scrolling page, with the room as a
+   picture in its intro. Phones switch between them from the nav; anything
+   bigger steps into the room from that picture and back out. */
 html[data-view="classic"] #hero,
 html[data-view="room"] #hero ~ *,
 html[data-view="room"] [data-classic] {
+  display: none;
+}
+/* The room floats in the same night sky as the page (RoomSky in
+   NightSky.tsx): its own dark backdrop, the fade under the nav and the glow
+   behind it step aside. That sky is only seen where the room is the view, but
+   it keeps running under the page, so the two stay in step. */
+[data-room-sky] { visibility: hidden; }
+html[data-view="room"] [data-room-sky] { visibility: visible; }
+/* A phone's Room view seen from outside has the name where the moon and
+   Cassiopeia are: they fade out there, and back once you're inside. */
+[data-room-sky] [data-moon],
+[data-room-sky] [data-constellation] {
+  transition: opacity 0.4s ease;
+}
+html[data-phone][data-view="room"]:not([data-lab-zoomed]) [data-room-sky] [data-moon],
+html[data-phone][data-view="room"]:not([data-lab-zoomed]) [data-room-sky] [data-constellation] {
+  opacity: 0;
+}
+#hero { background: transparent; }
+#hero > .bg-gradient-to-b,
+#hero svg[data-cam] > ellipse[fill="url(#lab-halo)"] {
   display: none;
 }
 html[data-view="room"],

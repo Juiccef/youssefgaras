@@ -307,7 +307,7 @@ export function LabHotspots({
             }
           }}
         >
-          <title>{h.label}</title>
+          {!h.quiet && <title>{h.label}</title>}
         </polygon>
       ))}
     </svg>

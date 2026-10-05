@@ -2,12 +2,15 @@
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Menu, X } from "lucide-react";
-import { HOME_EVENT, PICK_EVENT, setView, useView, type SiteView } from "@/components/lab/view";
+import { HOME_EVENT, PICK_EVENT, setView, usePhone, useView, type SiteView } from "@/components/lab/view";
 
-// In room view (the preview's homelab hero) every link opens the matching
-// object in the room instead of scrolling to its section.
+// In room view every link opens the matching object in the room instead of
+// scrolling to its section. Only phones have a Room view to switch to: on
+// anything bigger the room is stepped into from the page, and the nav steps
+// aside while you're in there.
 const links = [
   { href: "#projects", label: "Projects", id: "projects", room: "monitor" },
+  { href: "#homelab", label: "Homelab", id: "homelab", room: "rack" },
   { href: "#websites", label: "Websites", id: "websites", room: "monitor" },
   { href: "#experience", label: "Experience", id: "experience", room: "badge" },
   { href: "#about", label: "About", id: "about", room: "resume" },
@@ -17,7 +20,7 @@ const links = [
 
 const sectionIds = links.map((l) => l.id);
 
-/** Room ⇄ Classic: two keys, the current one held down. */
+/** Room ⇄ Classic (phones): two keys, the current one held down. */
 function ViewSwitch({ view }: { view: SiteView }) {
   return (
     <div role="group" aria-label="View" className="flex items-center gap-1 rounded-[10px] bg-black/45 p-1 ring-1 ring-white/10">
@@ -38,6 +41,7 @@ function ViewSwitch({ view }: { view: SiteView }) {
 
 export function Nav() {
   const view = useView();
+  const phone = usePhone();
   const room = view === "room";
   const [scrolled, setScrolled] = useState(false);
   const [activeSection, setActiveSection] = useState("");
@@ -115,7 +119,7 @@ export function Nav() {
         </ul>
 
         <div className="flex items-center gap-3">
-          {view && <ViewSwitch view={view} />}
+          {view && phone && <ViewSwitch view={view} />}
 
           <a href="/resume.pdf" target="_blank" rel="noopener noreferrer" className="key key-sm key-light hidden sm:inline-flex">
             Resume ↗

@@ -1,9 +1,12 @@
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
+import { SkyMotion } from "@/components/SkyMotion";
 
 // Background for the classic sections: the night outside the room's window.
 // The sky itself stays put while the page scrolls over it (a sticky,
-// viewport-sized layer): stars, a faint Milky Way, two constellations, the
-// moon, satellites drifting across and the odd shooting star. The Atlanta
+// viewport-sized layer): stars at three depths, a faint Milky Way, two
+// constellations, the moon, satellites drifting across and the odd shooting
+// star. All of it shifts against the mouse and drifts as the page scrolls,
+// nearer things more (.par in globals.css, fed by SkyMotion). The Atlanta
 // skyline rises at the end and runs into the footer. CSS/SVG only.
 
 /** Deterministic PRNG so server and client render the same sky. */
@@ -12,18 +15,31 @@ function prng(seed: number) {
   return () => (a = (a * 16807) % 2147483647) / 2147483647;
 }
 
-function starLayer(seed: number, count: number, max = 0.75) {
+/** How far a layer moves: `d` px against the mouse, `s` of the page's scroll. */
+const depth = (d: number, s = 0) => ({ "--d": d, "--s": s }) as CSSProperties;
+
+// mostly blue-white, a few warm stars and a few cool ones
+const TINTS = ["226,232,255", "226,232,255", "226,232,255", "255,228,186", "186,214,255"];
+
+function starLayer(seed: number, count: number, max = 0.75, sizes = [1, 1.6]) {
   const r = prng(seed);
   return Array.from({ length: count }, () => {
     const x = (r() * 100).toFixed(2);
     const y = (r() * 100).toFixed(2);
     const o = (0.18 + r() * (max - 0.18)).toFixed(2);
-    const s = r() < 0.12 ? 1.6 : 1;
-    return `radial-gradient(${s}px ${s}px at ${x}% ${y}%, rgba(226,232,255,${o}), transparent)`;
+    const s = r() < 0.12 ? sizes[1] : sizes[0];
+    const tint = TINTS[Math.floor(r() * TINTS.length)];
+    return `radial-gradient(${s}px ${s}px at ${x}% ${y}%, rgba(${tint},${o}), transparent)`;
   }).join(",");
 }
 
-const STARS = `${starLayer(7, 40)}, ${starLayer(4201, 24)}`;
+// Far to near: small tiles of faint stars at the back (so a phone's narrow
+// screen still gets a full sky), fewer and brighter ones toward the front.
+const STAR_FIELDS = [
+  { tile: 560, stars: starLayer(7, 44, 0.55), d: 6, s: 0.02 },
+  { tile: 760, stars: starLayer(4201, 30, 0.8), d: 13, s: 0.045 },
+  { tile: 900, stars: starLayer(613, 14, 0.95, [1.6, 2.4]), d: 22, s: 0.08 },
+];
 const MILKY_STARS = starLayer(99, 70, 0.5);
 const BAND = "linear-gradient(118deg, transparent 28%, rgba(0,0,0,0.6) 44%, #000 50%, rgba(0,0,0,0.6) 56%, transparent 72%)";
 
@@ -53,7 +69,14 @@ const CASSIOPEIA = {
 function Constellation({ c, className }: { c: typeof DIPPER; className: string }) {
   return (
     // drawn at 65% so it fits in the side margin beside the content column
-    <svg width={c.w * 0.65} height={(c.h + 16) * 0.65} viewBox={`0 0 ${c.w} ${c.h + 16}`} className={`absolute ${className}`}>
+    <svg
+      width={c.w * 0.65}
+      height={(c.h + 16) * 0.65}
+      viewBox={`0 0 ${c.w} ${c.h + 16}`}
+      data-constellation={c.label}
+      className={`par absolute ${className}`}
+      style={depth(15, 0.03)}
+    >
       {c.links.map(([a, b], i) => (
         <line key={i} x1={c.stars[a][0]} y1={c.stars[a][1]} x2={c.stars[b][0]} y2={c.stars[b][1]} stroke="rgba(190,205,255,0.16)" strokeWidth={0.8} />
       ))}
@@ -151,20 +174,115 @@ const WINDOWS = (() => {
 // the aircraft warning light on top of the Bank of America Plaza mast
 const MAST_TOP = { x: 560 + 34 / 2, y: GROUND - 104 - 36 };
 
+// Two rows, each a little wider than the page so it can slide sideways with
+// the mouse: the near row moves further than the hazy one behind it.
+const ROW = "par-x absolute -left-8 top-0 h-full w-[calc(100%+4rem)]";
+
 function Skyline() {
   return (
-    <svg viewBox={`0 0 1200 ${GROUND}`} preserveAspectRatio="xMidYMax slice" className="absolute inset-0 h-full w-full" aria-hidden>
-      <path d={skylinePath(FAR)} fill="#0c1122" />
-      <path d={skylinePath(NEAR)} fill="#05070d" />
-      {WINDOWS.map((w, i) => (
-        <rect key={i} x={w.x} y={w.y} width={2.2} height={2.8} fill={w.warm ? "#fcd9a0" : "#dbeafe"} opacity={w.warm ? 0.5 : 0.4} />
-      ))}
-      <circle cx={MAST_TOP.x} cy={MAST_TOP.y} r={1.6} fill="#fb7185" className="sky-blink" />
-    </svg>
+    <>
+      <svg viewBox={`0 0 1200 ${GROUND}`} preserveAspectRatio="xMidYMax slice" className={ROW} style={depth(7)} aria-hidden>
+        <path d={skylinePath(FAR)} fill="#0c1122" />
+      </svg>
+      <svg viewBox={`0 0 1200 ${GROUND}`} preserveAspectRatio="xMidYMax slice" className={ROW} style={depth(17)} aria-hidden>
+        <path d={skylinePath(NEAR)} fill="#05070d" />
+        {WINDOWS.map((w, i) => (
+          <rect key={i} x={w.x} y={w.y} width={2.2} height={2.8} fill={w.warm ? "#fcd9a0" : "#dbeafe"} opacity={w.warm ? 0.5 : 0.4} />
+        ))}
+        <circle cx={MAST_TOP.x} cy={MAST_TOP.y} r={1.6} fill="#fb7185" className="sky-blink" />
+      </svg>
+    </>
   );
 }
 
 // ─── The sky ─────────────────────────────────────────────────────────────
+
+/** Everything in the sky, for a box the size of the screen: the page's sticky layer and the room's backdrop each hold one. */
+function Sky() {
+  return (
+    <>
+      {/* Each field is taller than the screen by one tile and a margin, so
+          it can drift up as the page scrolls (wrapping a tile at a time)
+          and shift with the mouse without showing an edge. */}
+      {STAR_FIELDS.map(({ tile, stars, d, s }) => (
+        <div
+          key={tile}
+          className="par-wrap absolute -inset-x-10 -top-10"
+          style={
+            {
+              height: `calc(100lvh + ${tile}px + 5rem)`,
+              backgroundImage: stars,
+              backgroundSize: `${tile}px ${tile}px`,
+              "--wrap": `${tile}px`,
+              ...depth(d, s),
+            } as CSSProperties
+          }
+        />
+      ))}
+      {/* Milky Way: a faint band with denser stars */}
+      <div
+        className="par absolute -inset-10 opacity-70"
+        style={{
+          backgroundImage: `${MILKY_STARS}, linear-gradient(118deg, transparent 30%, rgba(160,170,235,0.05) 46%, rgba(190,180,240,0.07) 50%, rgba(160,170,235,0.05) 54%, transparent 70%)`,
+          backgroundSize: "700px 600px, 100% 100%",
+          maskImage: BAND,
+          WebkitMaskImage: BAND,
+          ...depth(9),
+        }}
+      />
+      {/* the twinkling ones, two screens of them so they can wrap as well */}
+      <div className="par-wrap absolute inset-x-0 top-0 h-[200lvh]" style={{ "--wrap": "100lvh", ...depth(18, 0.065) } as CSSProperties}>
+        {[0, 1].map((screen) => (
+          <div key={screen} className="absolute inset-x-0 h-lvh" style={{ top: `${screen * 100}lvh` }}>
+            {TWINKLES.map(([x, y, delay, dur], i) => (
+              <span
+                key={i}
+                className="sky-twinkle absolute h-[2px] w-[2px] rounded-full bg-[#eef2ff] shadow-[0_0_5px_1px_rgba(210,222,255,0.6)]"
+                style={{ left: `${x}%`, top: `${y}%`, animationDelay: `${delay.toFixed(2)}s`, animationDuration: `${dur.toFixed(2)}s` }}
+              />
+            ))}
+          </div>
+        ))}
+      </div>
+
+      {/* Cassiopeia sits top left under the nav until the side margins are
+          wide enough for both, beside the content */}
+      <Constellation c={DIPPER} className="left-[1.2%] top-[64%] hidden min-[1400px]:block" />
+      <Constellation c={CASSIOPEIA} className="left-[5%] top-[5.25rem] min-[1400px]:left-auto min-[1400px]:right-[1.5%] min-[1400px]:top-[40%]" />
+
+      {/* the moon from the window */}
+      <div
+        data-moon=""
+        className="par absolute right-[9%] top-24 h-14 w-14 rounded-full bg-[#e7ecf4] opacity-80 shadow-[0_0_60px_18px_rgba(200,214,240,0.10)] md:top-28 md:h-16 md:w-16"
+        style={depth(26, 0.035)}
+      >
+        <span className="absolute left-[22%] top-[26%] h-[18%] w-[18%] rounded-full bg-[#cfd6e2]" />
+        <span className="absolute left-[55%] top-[55%] h-[12%] w-[12%] rounded-full bg-[#d6dce7]" />
+      </div>
+
+      {/* satellites crossing (Nilesat, Arabsat, Hotbird…): the nearest things in the sky */}
+      <div className="sky-moving sky-drift-east par absolute left-0 top-[24%]" style={{ animationDuration: "110s", animationDelay: "-35s", ...depth(44) }}>
+        <Satellite />
+      </div>
+      <div className="sky-moving sky-drift-west par absolute left-0 top-[68%] scale-75" style={{ animationDuration: "140s", animationDelay: "-90s", ...depth(34) }}>
+        <Satellite />
+      </div>
+
+      {/* shooting stars */}
+      {[
+        { left: "72%", top: "14%", dur: "17s", delay: "3s" },
+        { left: "38%", top: "44%", dur: "23s", delay: "12s" },
+      ].map((s) => (
+        <div key={s.left} className="sky-moving par absolute -rotate-[24deg]" style={{ left: s.left, top: s.top, ...depth(30) }}>
+          <span
+            className="sky-shoot block h-px w-28 bg-gradient-to-r from-white/90 to-transparent"
+            style={{ animationDuration: s.dur, animationDelay: s.delay }}
+          />
+        </div>
+      ))}
+    </>
+  );
+}
 
 export function NightSky({ children }: { children: ReactNode }) {
   return (
@@ -173,69 +291,40 @@ export function NightSky({ children }: { children: ReactNode }) {
       className="relative z-10 overflow-clip"
       style={{ background: "linear-gradient(180deg, #06080f 0%, #080b16 30%, #0b0f1d 65%, #121129 88%, #1c1530 100%)" }}
     >
+      <SkyMotion />
       <div aria-hidden className="pointer-events-none absolute inset-0">
-        <div className="sticky top-0 h-[100svh] overflow-hidden">
-          <div className="absolute inset-0" style={{ backgroundImage: STARS, backgroundSize: "1400px 1100px, 950px 1300px", backgroundPosition: "0 0, 310px 520px" }} />
-          {/* Milky Way: a faint band with denser stars */}
-          <div
-            className="absolute inset-0 opacity-70"
-            style={{
-              backgroundImage: `${MILKY_STARS}, linear-gradient(118deg, transparent 30%, rgba(160,170,235,0.05) 46%, rgba(190,180,240,0.07) 50%, rgba(160,170,235,0.05) 54%, transparent 70%)`,
-              backgroundSize: "700px 600px, 100% 100%",
-              maskImage: BAND,
-              WebkitMaskImage: BAND,
-            }}
-          />
-          {TWINKLES.map(([x, y, delay, dur], i) => (
-            <span
-              key={i}
-              className="sky-twinkle absolute h-[2px] w-[2px] rounded-full bg-[#eef2ff] shadow-[0_0_5px_1px_rgba(210,222,255,0.6)]"
-              style={{ left: `${x}%`, top: `${y}%`, animationDelay: `${delay.toFixed(2)}s`, animationDuration: `${dur.toFixed(2)}s` }}
-            />
-          ))}
-
-          {/* only where the margins beside the content are wide enough */}
-          <Constellation c={DIPPER} className="left-[1.2%] top-[64%] hidden min-[1400px]:block" />
-          <Constellation c={CASSIOPEIA} className="right-[1.5%] top-[40%] hidden min-[1400px]:block" />
-
-          {/* the moon from the window */}
-          <div className="absolute right-[9%] top-24 h-14 w-14 rounded-full bg-[#e7ecf4] opacity-80 shadow-[0_0_60px_18px_rgba(200,214,240,0.10)] md:top-28 md:h-16 md:w-16">
-            <span className="absolute left-[22%] top-[26%] h-[18%] w-[18%] rounded-full bg-[#cfd6e2]" />
-            <span className="absolute left-[55%] top-[55%] h-[12%] w-[12%] rounded-full bg-[#d6dce7]" />
-          </div>
-
-          {/* satellites crossing (Nilesat, Arabsat, Hotbird…) */}
-          <div className="sky-moving sky-drift-east absolute left-0 top-[24%]" style={{ animationDuration: "110s", animationDelay: "-35s" }}>
-            <Satellite />
-          </div>
-          <div className="sky-moving sky-drift-west absolute left-0 top-[68%] scale-75" style={{ animationDuration: "140s", animationDelay: "-90s" }}>
-            <Satellite />
-          </div>
-
-          {/* shooting stars */}
-          {[
-            { left: "72%", top: "14%", dur: "17s", delay: "3s" },
-            { left: "38%", top: "44%", dur: "23s", delay: "12s" },
-          ].map((s) => (
-            <div key={s.left} className="sky-moving absolute -rotate-[24deg]" style={{ left: s.left, top: s.top }}>
-              <span
-                className="sky-shoot block h-px w-28 bg-gradient-to-r from-white/90 to-transparent"
-                style={{ animationDuration: s.dur, animationDelay: s.delay }}
-              />
-            </div>
-          ))}
+        <div data-sky-vars="" className="sticky top-0 h-lvh overflow-hidden">
+          <Sky />
         </div>
       </div>
-      {/* hand-off from the hero */}
-      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-[#06080f] to-transparent" />
-
       <div className="relative">{children}</div>
 
       {/* city glow + skyline, flowing into the footer */}
-      <div aria-hidden className="pointer-events-none relative h-32 md:h-44">
+      <div aria-hidden data-sky-vars="" className="pointer-events-none relative h-32 md:h-44">
         <div className="absolute inset-0 bg-[radial-gradient(70%_100%_at_50%_100%,rgba(140,90,160,0.2),transparent_70%)]" />
         <Skyline />
       </div>
+    </div>
+  );
+}
+
+/**
+ * The same sky behind the room, wherever the room is the view (a phone's Room
+ * view, and anywhere once you've stepped inside): the room floats in it.
+ * Fixed to the screen, under the room's own layers. It keeps running while
+ * the page is showing instead (hidden, see globals.css), so the two skies
+ * stay in step.
+ */
+export function RoomSky() {
+  return (
+    <div
+      aria-hidden
+      data-room-sky=""
+      data-sky-vars=""
+      className="pointer-events-none fixed inset-0 overflow-hidden"
+      style={{ background: "linear-gradient(180deg, #06080f 0%, #070a13 100%)" }}
+    >
+      <Sky />
     </div>
   );
 }

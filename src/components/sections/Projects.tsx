@@ -12,10 +12,10 @@ const projects = PROJECTS;
    until a real screenshot is swapped in. */
 function PreviewPlaceholder({ file }: { file: string }) {
   return (
-    <div className="relative w-full h-44 md:h-48 dot-grid bg-[#0b100e] flex flex-col items-center justify-center gap-2 border-b border-white/[0.06]">
-      <TerminalSquare className="w-6 h-6 text-putty/50" aria-hidden />
+    <div className="relative w-full h-44 md:h-48 dot-grid bg-[#080b14] flex flex-col items-center justify-center gap-2 border-b border-white/[0.06]">
+      <TerminalSquare className="w-6 h-6 text-sec/50" aria-hidden />
       <p className="font-mono text-[11px] text-white/50">./previews/{file}</p>
-      <p className="font-mono text-[10px] tracking-widest uppercase text-putty/60">
+      <p className="font-mono text-[10px] tracking-widest uppercase text-sec/60">
         screenshot coming soon
       </p>
     </div>
@@ -24,11 +24,11 @@ function PreviewPlaceholder({ file }: { file: string }) {
 
 export function Projects() {
   return (
-    <section id="projects" className="py-24 md:py-32 px-6">
+    <section id="projects" data-sec="signal" className="py-24 md:py-32 px-6">
       <div className="max-w-6xl mx-auto">
         <SectionHeader index="01" kicker="Work" title="Projects" />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-8">
           {projects.map((project, i) => (
             <BlurFade key={project.name} delay={i * 0.08} className="h-full">
               <MagicCard className="h-full !p-0 overflow-hidden flex flex-col">
@@ -49,7 +49,7 @@ export function Projects() {
                         className="object-cover object-top transition-transform duration-500 group-hover:scale-105"
                         sizes="(max-width: 768px) 100vw, 50vw"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#0f0f0f]" />
+                      <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#0a0d19]" />
                     </div>
                   ) : (
                     <PreviewPlaceholder file={project.placeholderFile ?? "preview.png"} />
@@ -58,12 +58,12 @@ export function Projects() {
 
                 <div className="flex flex-col flex-1 p-6">
                   <div className="flex items-start justify-between mb-3">
-                    <h3 className="text-lg font-semibold text-white leading-snug">{project.name}</h3>
+                    <h3 className="display text-[1.7rem] leading-[0.95] text-white">{project.name}</h3>
                     <a
                       href={project.link}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="ml-3 shrink-0 text-white/30 hover:text-putty transition-colors"
+                      className="ml-3 shrink-0 text-white/30 hover:text-sec transition-colors"
                       aria-label={`View ${project.name}`}
                     >
                       <ExternalLink size={16} />

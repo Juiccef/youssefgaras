@@ -4,6 +4,7 @@
 //   the visitor opens their first object (then never again, see HINTS_KEY)
 // - tips: a label over whatever the mouse (or keyboard focus) is on, saying
 //   what it opens. On touch, it shows when a tap zooms in on something small.
+//   The record player has none.
 //
 // Both live in the scene's camera; LabHero keeps them a constant size on
 // screen while it zooms.
@@ -22,7 +23,6 @@ export const TIPS: Record<string, string> = {
   badge: "Experience",
   phone: "Contact",
   camera: "Photography",
-  record: "Play Doomsday",
   print: "Photo print",
   map: "Network map",
   poster: "Hasbulla",
@@ -38,7 +38,8 @@ export const TIPS: Record<string, string> = {
   pdu: "PDU",
 };
 
-export const tipFor = (id: string, playing: boolean) => (id === "record" && playing ? "Doomsday ♪" : TIPS[id] ?? HOTSPOT_BY_ID[id]?.label ?? id);
+/** The hover label for an object, or null when it has none (a `quiet` hotspot, like the record player). */
+export const tipFor = (id: string) => (HOTSPOT_BY_ID[id]?.quiet ? null : TIPS[id] ?? HOTSPOT_BY_ID[id]?.label ?? id);
 
 /** The objects that get a marker: one per kind of thing, not every hotspot. */
 const MARKED = ["monitor", "resume", "camera", "record", "rack", "map", "cert-secplus", "print"];

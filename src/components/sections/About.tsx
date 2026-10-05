@@ -16,9 +16,9 @@ const skills = {
 
 export function About() {
   return (
-    <section id="about" className="py-24 md:py-32 px-6 border-t border-white/[0.06]">
+    <section id="about" data-sec="dusk" className="py-24 md:py-32 px-6 border-t border-white/[0.06]">
       <div className="max-w-6xl mx-auto">
-        <SectionHeader index="04" kicker="Story" title="About" />
+        <SectionHeader index="05" kicker="Story" title="About" />
 
         <div className="grid md:grid-cols-[280px_1fr] gap-12 items-start">
           <BlurFade delay={0.1}>
@@ -28,7 +28,7 @@ export function About() {
                 alt="Youssef Garas"
                 fill
                 className="object-cover transition-transform duration-700 group-hover:scale-[1.02]"
-                sizes="280px"
+                sizes="(max-width: 768px) 100vw, 280px"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#080808]/40 via-transparent to-transparent pointer-events-none" />
               <div className="absolute bottom-3 left-3 right-3">
@@ -42,23 +42,24 @@ export function About() {
             <div className="space-y-8">
               <div className="space-y-5 text-white/70 leading-relaxed text-[1.05rem] max-w-2xl">
                 <p>
-                  I graduated from Georgia State University in 2026 with a B.S. in Computer Science,
-                  concentrating in Cybersecurity. Security isn&apos;t a track I fell into — it&apos;s what
-                  I&apos;ve been building toward: I hold CCNA and CompTIA Security+, giving me a solid
-                  foundation in network defense and threat analysis, and I&apos;m now an endpoint intern
-                  at McKenney&apos;s.
+                  I am a Computer Science graduate from Georgia State University, a CCNA and Security+
+                  holder, and an endpoint intern at McKenney&apos;s, interested in cloud infrastructure and
+                  cybersecurity.
                 </p>
                 <p>
-                  I&apos;m drawn to the intersection of AI and security — building systems that are both
-                  intelligent and hard to break — and I use AI every day: I run an independent e-commerce
-                  store with Claude and MCP connectors handling its social content, product content and
-                  inbox. I also spent nearly four years as Technical Director for a live international TV
-                  broadcast reaching millions of viewers across the Middle East, which taught me to work
-                  under zero-error pressure. I speak Arabic, German, and English.
+                  What makes my background unique is my ability to connect the dots across the entire
+                  technology stack. I don&apos;t just configure secure networks and deploy self-hosted
+                  infrastructure; I also have a strong foundation in software engineering, AI automation,
+                  and frontend design. Whether it&apos;s building a facial-recognition security system,
+                  hardening a self-hosted server with encrypted cloud backups, or designing a sleek,
+                  intuitive UI, I enjoy turning complex backend ideas into functional, visually polished,
+                  real-world solutions.
                 </p>
                 <p>
-                  I&apos;m looking for security engineering and software roles. If you&apos;re building
-                  something that needs to be both smart and secure, I&apos;d love to talk.
+                  I also spent nearly four years as technical director for a live international TV
+                  broadcast that reached millions of viewers across the Middle East, which taught me to
+                  work when there&apos;s no room for error. I speak Arabic, German and English, and
+                  I&apos;m looking for security engineering and software roles.
                 </p>
               </div>
 
@@ -74,7 +75,7 @@ export function About() {
                           key={item}
                           className={
                             category === "Certifications"
-                              ? "text-xs px-2.5 py-1 rounded-lg bg-putty/10 border border-putty/20 text-putty"
+                              ? "text-xs px-2.5 py-1 rounded-lg bg-sec/10 border border-sec/25 text-sec"
                               : "text-xs px-2.5 py-1 rounded-lg bg-white/[0.04] border border-white/10 text-white/75"
                           }
                         >
@@ -86,21 +87,37 @@ export function About() {
                 ))}
               </div>
 
-              {/* Featured credentials: the certificates with a verification code */}
-              <div className="grid gap-4 lg:grid-cols-2">
+              {/* Featured credentials (the certificates with a verification code),
+                  framed the way they hang on the room's wall: black frame, cream
+                  mat, a picture light over each */}
+              <div className="grid gap-x-8 gap-y-12 pt-8 lg:grid-cols-2">
                 {FEATURED.map((c) => (
-                  <div key={c.id} className="flex flex-col gap-4 rounded-xl border border-putty/20 bg-putty/[0.04] p-5 sm:flex-row sm:items-center">
-                    <a
-                      href={c.file}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="relative block w-36 shrink-0 overflow-hidden rounded-lg border border-white/10 transition-colors hover:border-putty/40"
-                      aria-label={`Open ${c.name} certificate (PDF)`}
-                    >
-                      <Image src={c.thumb} alt={`${c.name} certificate thumbnail`} width={320} height={247} className="h-auto w-full" />
-                    </a>
-                    <div className="min-w-0">
-                      <p className="mb-1.5 flex items-center gap-1.5 font-mono text-xs uppercase tracking-[0.2em] text-putty">
+                  <figure key={c.id}>
+                    <div className="relative">
+                      {/* the light's pool on the wall, then the lamp itself */}
+                      <span aria-hidden className="absolute -inset-x-6 -top-8 bottom-1/3 bg-[radial-gradient(60%_70%_at_50%_0%,rgba(255,240,214,0.14),transparent_70%)]" />
+                      <span aria-hidden className="absolute left-[35%] -top-3 h-1.5 w-[30%] rounded-full bg-[#2b2f33] shadow-[inset_0_1px_0_rgba(255,255,255,0.14)]" />
+                      <a
+                        href={c.file}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="relative block bg-[#0c0d0e] p-2.5 shadow-[4px_6px_0_rgba(0,0,0,0.45)] transition-transform duration-300 hover:-translate-y-1"
+                        aria-label={`Open ${c.name} certificate (PDF)`}
+                      >
+                        <span className="block bg-[#e9e6de] p-2">
+                          <Image
+                            src={c.thumb}
+                            alt={`${c.name} certificate`}
+                            width={640}
+                            height={494}
+                            sizes="(max-width: 1024px) 90vw, 22rem"
+                            className="h-auto w-full"
+                          />
+                        </span>
+                      </a>
+                    </div>
+                    <figcaption className="mt-5 min-w-0">
+                      <p className="mb-1.5 flex items-center gap-1.5 font-mono text-xs uppercase tracking-[0.2em] text-sec">
                         <BadgeCheck className="h-3.5 w-3.5" aria-hidden />
                         Verified
                       </p>
@@ -113,7 +130,7 @@ export function About() {
                           href={c.file}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 text-sm text-putty transition-colors hover:text-white"
+                          className="inline-flex items-center gap-1.5 text-sm text-sec transition-colors hover:text-white"
                         >
                           Certificate <ExternalLink size={13} aria-hidden />
                         </a>
@@ -121,7 +138,7 @@ export function About() {
                           href={c.verify.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 text-sm text-putty transition-colors hover:text-white"
+                          className="inline-flex items-center gap-1.5 text-sm text-sec transition-colors hover:text-white"
                         >
                           Verify with {c.issuer} <ExternalLink size={13} aria-hidden />
                         </a>
@@ -129,8 +146,8 @@ export function About() {
                       <p className="mt-2 truncate font-mono text-[11px] text-white/55" title={c.verify.code}>
                         code {c.verify.code}
                       </p>
-                    </div>
-                  </div>
+                    </figcaption>
+                  </figure>
                 ))}
               </div>
             </div>

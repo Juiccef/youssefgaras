@@ -23,7 +23,7 @@ export function TechBadge({ tech }: TechBadgeProps) {
 
   if (!icon) {
     return (
-      <span className="inline-flex items-center text-xs px-2.5 py-1 rounded-full bg-putty/10 text-putty border border-putty/20">
+      <span className="inline-flex items-center text-xs px-2.5 py-1 rounded-full bg-sec/10 text-sec border border-sec/20">
         {tech}
       </span>
     );

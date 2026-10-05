@@ -12,7 +12,8 @@ import { faceLeft, faceRect, faceTop, onLeft, pts, rng, type Pt } from "./iso";
  * on (top-left, top-right, bottom-left corners) — the close-up view lifts off
  * that face when it opens.
  */
-export type Hotspot = { id: string; label: string; points: string; face?: [Pt, Pt, Pt] };
+/** `label` names the object (screen readers, and the hover label when hints.tsx has no shorter one); `quiet`: no hover label at all. */
+export type Hotspot = { id: string; label: string; points: string; face?: [Pt, Pt, Pt]; quiet?: boolean };
 /** Boot label shown while a part powers on (screen coords: leader anchor + label's right edge). */
 export type Tag = { id: string; text: string; anchor: [number, number]; box: [number, number] };
 

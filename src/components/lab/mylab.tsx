@@ -7,8 +7,8 @@
 import { Box, FloorShadow, Led, boxHull, type Device, type Hotspot, type Tag } from "./devices";
 import { faceLeft, faceRect, faceRight, faceTop, iso, onLeft, onRight, pathD, pts, rng, type Pt } from "./iso";
 import {
-  BF, BLANK, D, H, P, P340, PART_LOCAL, PATCH, PDU_V, PLUGGED, SSD, SWITCH, SW_BODY, TF, TINY, U, W,
-  P340Front, P340Leds, PatchFront, SsdFront, SsdLeds, SwitchFront, SwitchLeds, patchX, swX,
+  BF, D, H, P340, PART_LOCAL, PATCH, PDU_V, SSD, SWITCH, SW_BODY, TF, TINY, U, W,
+  P340Leds, RackFront, SsdLeds, SwitchLeds,
   type PartId,
 } from "./parts";
 
@@ -27,7 +27,6 @@ const CW = 84;
 const CD = 60;
 const CH = 48;
 
-const POST = "#d6dadd";
 const POST_DIM = "#b5bbbf";
 
 export type WorldBox = { x: number; y: number; z: number; w: number; d: number; h: number };
@@ -106,68 +105,7 @@ export function MyRack({ x, y, seed }: { x: number; y: number; seed: number }): 
 
       {/* Front */}
       <g transform={front}>
-        <rect width={W} height={H} fill="#0a0c0e" />
-        <rect width={P} height={H} fill={POST} />
-        <rect x={W - P} width={P} height={H} fill={POST} />
-        <rect width={W} height={TF} fill="#e2e5e7" />
-        <rect y={H - BF} width={W} height={BF} fill={POST} />
-        <text x={W / 2 - 3.5} y={3} fontSize={1.8} fill="#111" className="lab-mono">Tec</text>
-        <text x={W / 2} y={6.6} fontSize={3.8} fontWeight={700} fill="#111" textAnchor="middle" letterSpacing={0.2}>MOJO</text>
-        {Array.from({ length: 6 }, (_, i) => (
-          <g key={i}>
-            <circle cx={P / 2} cy={TF + i * U + U / 2} r={0.8} fill="#7d8489" />
-            <circle cx={W - P / 2} cy={TF + i * U + U / 2} r={0.8} fill="#7d8489" />
-            <text x={P / 2} y={TF + i * U + 2.6} fontSize={1.4} fill="#8a9196" textAnchor="middle">{`0${6 - i}`}</text>
-          </g>
-        ))}
-
-        {/* 1U blank */}
-        <rect x={2} y={BLANK[0] + 0.3} width={W - 4} height={U - 0.6} fill="#0e1012" stroke="rgba(255,255,255,0.06)" strokeWidth={0.3} />
-        {[[4, BLANK[0] + 2.6], [4, BLANK[1] - 2.6], [W - 4, BLANK[0] + 2.6], [W - 4, BLANK[1] - 2.6]].map(([cx, cy], i) => (
-          <circle key={i} cx={cx} cy={cy} r={0.9} fill="#454b50" />
-        ))}
-
-        <g transform={`translate(2 ${PATCH[0]})`}>
-          <PatchFront />
-        </g>
-
-        {/* Switch shelf + TL-SG108E */}
-        <rect x={2} y={SWITCH[0] + 0.5} width={6} height={U - 1} fill="#121416" />
-        <rect x={W - 8} y={SWITCH[0] + 0.5} width={6} height={U - 1} fill="#121416" />
-        <rect x={7} y={SWITCH[1] - 1} width={W - 14} height={1} fill="#1d2023" />
-        <g transform={`translate(13 ${SW_BODY[0]})`}>
-          <SwitchFront />
-        </g>
-
-        {/* White Cat6a jumpers: patch 3–10 → switch 1–8 */}
-        <g fill="none" stroke="#eef1f3" strokeWidth={0.9} strokeLinecap="round" opacity={0.85}>
-          {PLUGGED.map((p, i) => {
-            const x1 = 2 + patchX(p) + 1.45;
-            const y1 = PATCH[0] + 4;
-            const x2 = 13 + swX(i) + 1.7;
-            const y2 = SW_BODY[0] + 3.4;
-            return <path key={p} d={`M${x1} ${y1} C${x1 - 1.5} ${y1 + 6}, ${x2 + 2.5} ${y2 - 5}, ${x2} ${y2}`} />;
-          })}
-        </g>
-
-        {/* P340 shelf: ThinkStation P340 Tiny + 2 TB SSD on top */}
-        <rect x={2} y={TINY[0] + 0.5} width={6} height={2 * U - 1} fill="#121416" />
-        <rect x={W - 8} y={TINY[0] + 0.5} width={6} height={2 * U - 1} fill="#121416" />
-        <rect x={7} y={TINY[1] - 1} width={W - 14} height={1} fill="#1d2023" />
-        <g transform={`translate(31 ${SSD[0]})`}>
-          <SsdFront />
-        </g>
-        <g transform={`translate(12 ${P340[0]})`}>
-          <P340Front />
-        </g>
-
-        {/* Bottom vented shelf */}
-        <rect x={2} y={TINY[1] + 0.5} width={6} height={U - 1} fill="#121416" />
-        <rect x={W - 8} y={TINY[1] + 0.5} width={6} height={U - 1} fill="#121416" />
-        <rect x={7} y={H - BF - 2} width={W - 14} height={2} fill="#15181b" />
-        {Array.from({ length: 26 }, (_, i) => (
-          <rect key={i} x={9 + i * 2.2} y={H - BF - 1.6} width={1} height={1.2} fill="#050607" />
-        ))}
+        <RackFront />
       </g>
 
       {handle(rx + 5.2 * S, rx + 19.3 * S, "h1")}

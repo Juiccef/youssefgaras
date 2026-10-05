@@ -135,7 +135,9 @@ export function RecordPlayer(): Device {
   const face: [Pt, Pt, Pt] = [[u0, v0, z], [u0 + d, v0, z], [u0, v0 + d, z]];
   const hotspot: Hotspot = {
     id: "record",
-    label: "Record player — play MF DOOM, Doomsday",
+    label: "Record player",
+    // no hover label: what it plays is a surprise
+    quiet: true,
     points: pts(boxHull(CAB.x, CAB.y, 0, CAB.w, CAB.d, TT_TOP + 4)),
     face,
   };

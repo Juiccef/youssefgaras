@@ -1,11 +1,12 @@
 "use client";
 
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { CERTS, EXPERIENCE, HOMELAB, PROJECTS, RESUME_URL, SOCIALS } from "@/lib/content";
 
 // The homelab server's own Linux console (Debian, tty1). Modes:
-//   intro — the start screen: "penguin login:", then a shell; return / `boot` powers the lab on
+//   intro — the start screen: "penguin login:", then a shell; return / `boot` powers the lab on.
+//           On a first visit it plays itself (`autoplay`): it logs in and runs `boot`.
 //   busy  — the lab is booting, no prompt
 //   shell — the drop-down console after boot; `exit` logs out and powers the lab down
 
@@ -13,7 +14,7 @@ export type LabTerminalHandle = {
   print: (...nodes: ReactNode[]) => void;
   clear: () => void;
   focus: () => void;
-  /** Log in without the banner (restored session, skip intro). */
+  /** Log in without the banner (restored session, skip intro). Clears anything half-typed. */
   login: (user: string) => void;
   /** Back to the login screen. */
   reset: () => void;
@@ -23,6 +24,8 @@ type Mode = "intro" | "busy" | "shell";
 
 type Props = {
   mode: Mode;
+  /** Start screen: play itself, logging in as this name and running `boot` (the prompt takes no typing meanwhile). */
+  autoplay?: string | null;
   /** fast = skip the cinematic and jump straight to the site */
   onBoot: (fast?: boolean, user?: string) => void;
   onLogout: (reason: "exit" | "reboot") => void;
@@ -74,7 +77,7 @@ const NMAP: { port: string; state: "open" | "filtered"; svc: string; target?: st
   { port: "8443/tcp", state: "open", svc: "websites", target: "websites" },
 ];
 
-const SECTIONS = ["projects", "websites", "experience", "about", "photography", "contact"];
+const SECTIONS = ["projects", "homelab", "websites", "experience", "about", "photography", "contact"];
 
 const jump = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
 
@@ -142,7 +145,7 @@ function Motd({ user }: { user: string }) {
   );
 }
 
-export const LabTerminal = forwardRef<LabTerminalHandle, Props>(function LabTerminal({ mode, onBoot, onLogout, onClose }, ref) {
+export const LabTerminal = forwardRef<LabTerminalHandle, Props>(function LabTerminal({ mode, autoplay, onBoot, onLogout, onClose }, ref) {
   const [lines, setLines] = useState<{ id: number; node: ReactNode }[]>(() => [{ id: -1, node: <Banner /> }]);
   const [user, setUser] = useState<string | null>(null);
   const [input, setInput] = useState("");
@@ -153,8 +156,10 @@ export const LabTerminal = forwardRef<LabTerminalHandle, Props>(function LabTerm
   const bodyRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const push = (...nodes: ReactNode[]) =>
-    setLines((prev) => [...prev.slice(-200), ...nodes.map((node) => ({ id: idRef.current++, node }))]);
+  const push = useCallback(
+    (...nodes: ReactNode[]) => setLines((prev) => [...prev.slice(-200), ...nodes.map((node) => ({ id: idRef.current++, node }))]),
+    [],
+  );
 
   useImperativeHandle(
     ref,
@@ -162,14 +167,17 @@ export const LabTerminal = forwardRef<LabTerminalHandle, Props>(function LabTerm
       print: push,
       clear: () => setLines([]),
       focus: () => inputRef.current?.focus({ preventScroll: true }),
-      login: (name: string) => setUser((u) => u ?? name),
+      login: (name: string) => {
+        setUser((u) => u ?? name);
+        setInput("");
+      },
       reset: () => {
         setUser(null);
         setInput("");
         setLines([{ id: idRef.current++, node: <Banner /> }]);
       },
     }),
-    [],
+    [push],
   );
 
   useEffect(() => {
@@ -182,6 +190,38 @@ export const LabTerminal = forwardRef<LabTerminalHandle, Props>(function LabTerm
     if (mode === "busy") return;
     if (window.matchMedia("(pointer: fine)").matches) inputRef.current?.focus({ preventScroll: true });
   }, [mode]);
+
+  // Start screen playing itself: the name is typed at the login prompt, then
+  // `boot` at the shell, quickly enough that it reads as one motion.
+  useEffect(() => {
+    if (!autoplay) return;
+    const who = autoplay;
+    const timers: number[] = [];
+    const at = (ms: number, fn: () => void) => void timers.push(window.setTimeout(fn, ms));
+    const type = (text: string, from: number, per: number) => {
+      for (let i = 1; i <= text.length; i++) at(from + i * per, () => setInput(text.slice(0, i)));
+      return from + text.length * per;
+    };
+    const echo = (promptText: string, typed: string) => (
+      <p className="whitespace-pre-wrap break-words">
+        <span className="font-bold text-white">{promptText}</span>
+        {typed}
+      </p>
+    );
+    let t = type(who, 300, 55);
+    at((t += 140), () => {
+      setInput("");
+      setUser(who);
+      push(echo(`${HOST} login: `, who), <Motd user={who} />);
+    });
+    t = type("boot", t + 380, 65);
+    at(t + 140, () => {
+      setInput("");
+      push(echo(`${who}@${HOST}:~$ `, "boot"));
+      onBoot(false, who);
+    });
+    return () => timers.forEach((id) => window.clearTimeout(id));
+  }, [autoplay, onBoot, push]);
 
   // Start screen: typing anywhere lands in the prompt
   useEffect(() => {
@@ -458,6 +498,7 @@ export const LabTerminal = forwardRef<LabTerminalHandle, Props>(function LabTerm
   };
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (autoplay) return e.preventDefault();
     if (e.key === "Enter") {
       e.preventDefault();
       run(input);
@@ -517,6 +558,7 @@ export const LabTerminal = forwardRef<LabTerminalHandle, Props>(function LabTerm
               ref={inputRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
+              readOnly={!!autoplay}
               onKeyDown={onKeyDown}
               onFocus={() => setFocused(true)}
               onBlur={() => setFocused(false)}
@@ -533,7 +575,7 @@ export const LabTerminal = forwardRef<LabTerminalHandle, Props>(function LabTerm
       </div>
 
       {/* Start screen hints: type a name (desktop), or one tap in (touch) */}
-      {mode === "intro" && (
+      {mode === "intro" && !autoplay && (
         <div className="pointer-events-none flex items-center justify-between gap-3 px-5 pb-5 font-mono text-[11px] text-white/35 md:px-10 md:pb-8">
           <button
             type="button"

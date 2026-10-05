@@ -32,10 +32,10 @@ const links = [
 
 export function Contact() {
   return (
-    <section id="contact" className="py-24 md:py-32 px-6 border-t border-white/[0.06]">
+    <section id="contact" data-sec="signal" className="py-24 md:py-32 px-6 border-t border-white/[0.06]">
       <div className="max-w-4xl mx-auto">
         <SectionHeader
-          index="06"
+          index="07"
           kicker="Connect"
           title="Contact"
           lede="Open to security engineering and software roles. Always happy to talk about interesting projects."
@@ -48,10 +48,10 @@ export function Contact() {
                 href={href}
                 target={href.startsWith("mailto") ? undefined : "_blank"}
                 rel="noopener noreferrer"
-                className="flex items-center gap-4 p-5 rounded-xl border border-white/[0.08] bg-white/[0.02] hover:border-putty/25 hover:bg-white/[0.05] transition-all duration-200 group"
+                className="flex items-center gap-4 p-5 rounded-xl border border-white/[0.08] bg-white/[0.02] hover:border-sec/40 hover:bg-white/[0.05] transition-all duration-200 group"
               >
-                <div className="p-2.5 rounded-lg bg-white/[0.04] group-hover:bg-putty/10 transition-colors shrink-0">
-                  <Icon className="w-5 h-5 text-white/40 group-hover:text-putty transition-colors" />
+                <div className="p-2.5 rounded-lg bg-white/[0.04] group-hover:bg-sec/10 transition-colors shrink-0">
+                  <Icon className="w-5 h-5 text-sec/80 group-hover:text-sec transition-colors" />
                 </div>
                 <div className="min-w-0">
                   <p className="text-white/50 text-xs font-mono mb-0.5">{label}</p>

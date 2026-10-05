@@ -8,13 +8,18 @@ const photos = PHOTOS;
 
 export function Photography() {
   return (
-    <section id="photography" className="py-24 md:py-32 px-6 border-t border-white/[0.06]">
+    <section id="photography" data-sec="sodium" className="py-24 md:py-32 px-6 border-t border-white/[0.06]">
       <div className="max-w-6xl mx-auto">
         <SectionHeader
-          index="05"
+          index="06"
           kicker="Creative"
           title="Photography"
-          lede="Outside of code, I shoot. Hover to explore, click to expand."
+          lede={
+            <>
+              Outside of code, I shoot. <span className="md:hidden">Swipe through, tap to open.</span>
+              <span className="hidden md:inline">Hover to explore, click to expand.</span>
+            </>
+          }
         />
 
         <BlurFade delay={0.1}>

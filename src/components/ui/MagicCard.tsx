@@ -7,6 +7,8 @@ interface MagicCardProps {
   className?: string;
 }
 
+// A card whose face lights up under the mouse, in the colour of the section
+// it's in (--sec).
 export function MagicCard({ children, className }: MagicCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -26,13 +28,13 @@ export function MagicCard({ children, className }: MagicCardProps) {
       onMouseLeave={() => setIsHovered(false)}
       className={cn(
         "relative overflow-hidden rounded-xl border border-white/10 p-6 transition-colors duration-300",
-        isHovered ? "border-putty/30" : "",
+        isHovered ? "border-sec/40" : "",
         className
       )}
       style={{
         background: isHovered
-          ? `radial-gradient(350px circle at ${position.x}px ${position.y}px, rgba(230,217,181,0.07), transparent 70%), #0f0f0f`
-          : "#0f0f0f",
+          ? `radial-gradient(350px circle at ${position.x}px ${position.y}px, color-mix(in srgb, var(--sec, #e6d9b5) 10%, transparent), transparent 70%), #0a0d19`
+          : "#0a0d19",
       }}
     >
       {children}
