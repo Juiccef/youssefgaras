@@ -612,7 +612,7 @@ export const PartViewer = forwardRef<
               <ul className="mt-2 space-y-1.5 text-[12px] leading-relaxed text-white/60">
                 {HOMELAB.services.map((s) => (
                   <li key={s.name}>
-                    <span className="text-white/85">{s.name}</span>: {s.role}
+                    <span className="text-white/85">{s.name}</span>: {s.short}
                   </li>
                 ))}
               </ul>

@@ -197,14 +197,60 @@ export const CERTS = [
 export const HOMELAB = {
   host: "Lenovo ThinkStation P340 Tiny",
   os: "Debian 13 · headless · 24/7",
+  // `role` is the full line. `short` is for where there's little room (the P340's
+  // card in the room), and with `unit` it's how the console's login banner lists it.
   services: [
-    { name: "Caddy", role: "reverse proxy with TLS from my own internal CA, 8+ services routed by subdomain" },
-    { name: "AdGuard Home", role: "network-wide DNS + ad/tracker blocking, DNS-over-HTTPS upstream, split-horizon internal zone" },
-    { name: "Tailscale", role: "WireGuard mesh VPN for remote access from behind CGNAT, with subnet routing + split DNS" },
-    { name: "Docker Compose", role: "9+ container stack (media server with QuickSync transcoding, automation apps, Portainer) versioned in Git" },
-    { name: "restic → Backblaze B2", role: "encrypted, deduplicated offsite backups on a systemd timer, with restores tested and used for real" },
+    {
+      name: "Caddy",
+      unit: "caddy",
+      short: "reverse proxy, TLS from my own internal CA",
+      role: "reverse proxy with TLS from my own internal CA, 8+ services routed by subdomain",
+    },
+    {
+      name: "AdGuard Home",
+      unit: "adguard",
+      short: "network-wide DNS + ad/tracker blocking",
+      role: "network-wide DNS + ad/tracker blocking, DNS-over-HTTPS upstream, split-horizon internal zone",
+    },
+    {
+      name: "Tailscale",
+      unit: "tailscale",
+      short: "remote access from behind CGNAT",
+      role: "WireGuard mesh VPN for remote access from behind CGNAT, with subnet routing + split DNS",
+    },
+    {
+      name: "Docker Compose",
+      unit: "docker",
+      short: "9+ containers, versioned in Git",
+      role: "9+ container stack (media server with QuickSync transcoding, automation apps, Portainer) versioned in Git",
+    },
+    {
+      name: "restic → Backblaze B2",
+      unit: "restic",
+      short: "encrypted nightly offsite backups",
+      role: "encrypted, deduplicated offsite backups on a systemd timer, with restores tested and used for real",
+    },
+    {
+      name: "Wazuh",
+      unit: "wazuh",
+      short: "SIEM, agents on both hosts",
+      role: "SIEM with agents on both hosts, reporting file changes, logs, package vulnerabilities and configuration compliance",
+    },
+    {
+      name: "Prometheus + Grafana",
+      unit: "grafana",
+      short: "metrics, logs and alerts",
+      role: "metrics, dashboards and alert rules, with Loki centralizing logs from every container and system service",
+    },
   ],
-  hardening: ["SSH keys only (ed25519), no root/password login", "fail2ban", "ufw default-deny, LAN-scoped rules", "unattended security upgrades"],
+  hardening: [
+    "SSH keys only (ed25519), no root/password login",
+    "fail2ban",
+    "ufw default-deny, LAN-scoped rules",
+    "unattended security upgrades",
+    "CIS Debian 13 benchmark 43% → 96%, with an Ansible role",
+    "auditd, AppArmor, AIDE file integrity",
+  ],
   stories: [
     "Traced a 502 to ufw's default-deny silently dropping Docker bridge traffic, and fixed it with a scoped allow rule.",
     "An unpinned image jumped two major versions mid-migration and broke auth between services. I pinned the versions and documented it in the repo.",

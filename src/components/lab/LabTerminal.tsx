@@ -58,14 +58,8 @@ const COMMANDS: [string, string][] = [
   ["exit", "log out"],
 ];
 
-// What the login banner says is running (short versions of HOMELAB.services)
-const RUNNING: [string, string][] = [
-  ["caddy", "reverse proxy, TLS from my own internal CA"],
-  ["adguard", "network-wide DNS + ad/tracker blocking"],
-  ["tailscale", "remote access from behind CGNAT"],
-  ["docker", "9+ containers"],
-  ["restic", "encrypted nightly backups to Backblaze B2"],
-];
+// What the login banner says is running: the short version of each service
+const RUNNING = HOMELAB.services.map((s) => [s.unit, s.short] as const);
 
 const NMAP: { port: string; state: "open" | "filtered"; svc: string; target?: string }[] = [
   { port: "22/tcp", state: "open", svc: "about", target: "about" },
