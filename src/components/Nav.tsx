@@ -2,12 +2,10 @@
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Menu, X } from "lucide-react";
-import { HOME_EVENT, PICK_EVENT, setView, usePhone, useView, type SiteView } from "@/components/lab/view";
+import { HOME_EVENT, PICK_EVENT, useView } from "@/components/lab/view";
 
-// In room view every link opens the matching object in the room instead of
-// scrolling to its section. Only phones have a Room view to switch to: on
-// anything bigger the room is stepped into from the page, and the nav steps
-// aside while you're in there.
+// In the room every link opens the matching object instead of scrolling to
+// its section (the nav itself steps aside while you're inside).
 const links = [
   { href: "#projects", label: "Projects", id: "projects", room: "monitor" },
   { href: "#homelab", label: "Homelab", id: "homelab", room: "rack" },
@@ -20,28 +18,8 @@ const links = [
 
 const sectionIds = links.map((l) => l.id);
 
-/** Room ⇄ Classic (phones): two keys, the current one held down. */
-function ViewSwitch({ view }: { view: SiteView }) {
-  return (
-    <div role="group" aria-label="View" className="flex items-center gap-1 rounded-[10px] bg-black/45 p-1 ring-1 ring-white/10">
-      {(["room", "classic"] as const).map((v) => (
-        <button
-          key={v}
-          type="button"
-          aria-pressed={view === v}
-          onClick={() => setView(v)}
-          className={cn("key key-xs min-w-[4.25rem]", view === v && "key-light")}
-        >
-          {v === "room" ? "Room" : "Classic"}
-        </button>
-      ))}
-    </div>
-  );
-}
-
 export function Nav() {
   const view = useView();
-  const phone = usePhone();
   const room = view === "room";
   const [scrolled, setScrolled] = useState(false);
   const [activeSection, setActiveSection] = useState("");
@@ -97,7 +75,7 @@ export function Nav() {
       )}
     >
       <nav className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between gap-4">
-        <a href="#hero" onClick={goHome} aria-label="Youssef Garas — back to top" className="key key-sm key-icon text-[12px] font-bold tracking-tight">
+        <a href="#hero" onClick={goHome} aria-label="Youssef Garas, back to top" className="key key-sm key-icon text-[12px] font-bold tracking-tight">
           YG
         </a>
 
@@ -119,8 +97,6 @@ export function Nav() {
         </ul>
 
         <div className="flex items-center gap-3">
-          {view && phone && <ViewSwitch view={view} />}
-
           <a href="/resume.pdf" target="_blank" rel="noopener noreferrer" className="key key-sm key-light hidden sm:inline-flex">
             Resume ↗
           </a>

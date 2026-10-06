@@ -214,7 +214,7 @@ export function Homelab() {
                 <ul className="space-y-2.5">
                   {HOMELAB.stories.map((story) => (
                     <li key={story} className="flex gap-3 text-sm leading-relaxed text-white/65">
-                      <span className="mt-0.5 shrink-0 text-sec/70">—</span>
+                      <span className="shrink-0 text-sec/70">›</span>
                       {story}
                     </li>
                   ))}

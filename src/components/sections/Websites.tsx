@@ -14,7 +14,7 @@ export function Websites() {
           index="03"
           kicker="Client Work"
           title="Websites for Business"
-          lede="Design-and-build sites for real businesses — shipped, hosted, and bringing in customers."
+          lede="Design-and-build sites for real businesses. Shipped, hosted, and bringing in customers."
         />
 
         <div className="space-y-10">

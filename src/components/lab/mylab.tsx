@@ -245,7 +245,7 @@ export function Camera({ x, y, z }: { x: number; y: number; z: number }) {
   const face: [Pt, Pt, Pt] = [[x, y + d, z + h], [x + w, y + d, z + h], [x, y + d, z]];
   const hotspot: Hotspot = {
     id: "camera",
-    label: "Canon EOS M50 — my photography",
+    label: "Canon EOS M50: my photography",
     points: pts(boxHull(x, y, z, w, d + lensLen + 1, h + 4.5)),
     face,
   };

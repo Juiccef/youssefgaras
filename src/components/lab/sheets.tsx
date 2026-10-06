@@ -223,7 +223,7 @@ function ResumeSheet({ onClose }: { onClose: () => void }) {
       }
     >
       <div className="relative aspect-[17/22] w-[min(46rem,calc(100vw-1.5rem),calc((100svh-9.5rem)*0.7727))] bg-white shadow-[0_40px_120px_-20px_rgba(0,0,0,0.95)]">
-        <Image src={RESUME_IMAGE} alt="Youssef Garas — resume" fill sizes="(max-width: 768px) 100vw, 46rem" className="object-contain" />
+        <Image src={RESUME_IMAGE} alt="Youssef Garas, resume" fill sizes="(max-width: 768px) 100vw, 46rem" className="object-contain" />
       </div>
     </Layer>
   );
@@ -480,7 +480,7 @@ function RecordSheet({ onClose, onStop }: { onClose: () => void; onStop?: () => 
       onClose={onClose}
       closeLabel="back to the room"
       topOnPhones
-      caption={`${SONG.artist} — ${SONG.title}`}
+      caption={`${SONG.artist} · ${SONG.title}`}
       actions={
         onStop && (
           <button type="button" onClick={onStop} className={btn}>

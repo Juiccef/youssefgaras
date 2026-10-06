@@ -13,7 +13,7 @@ export function Experience() {
 
         <div className="space-y-6 md:space-y-8">
           {experiences.map((exp, i) => {
-            const [from, to] = exp.period.split(" — ");
+            const [from, to] = exp.period.split(" to ");
             return (
               <BlurFade key={exp.role} delay={i * 0.1}>
                 {/* a ticket (.ticket in globals.css): the dates on the stub, the job on the rest */}
@@ -26,7 +26,7 @@ export function Experience() {
                     <div className="min-w-0">
                       <p className="display whitespace-nowrap text-[clamp(1.15rem,6vw,1.6rem)] text-white md:text-[2rem]">
                         <span className="md:block">
-                          {from} <span className="text-sec">—</span>
+                          {from} <span className="text-sec">to</span>
                         </span>{" "}
                         <span className="md:block">{to}</span>
                       </p>
@@ -43,7 +43,7 @@ export function Experience() {
                     <ul className="space-y-2.5">
                       {exp.bullets.map((bullet, j) => (
                         <li key={j} className="text-white/65 text-sm leading-relaxed flex gap-3">
-                          <span className="text-sec/70 shrink-0 mt-0.5">—</span>
+                          <span className="text-sec/70 shrink-0">›</span>
                           {bullet}
                         </li>
                       ))}

@@ -1,17 +1,13 @@
 "use client";
 
-// The page and the room. On a phone they are two views, switched from the
-// nav and remembered: Room is the homelab on its own (no page scroll),
-// Classic is the scrolling portfolio under the night sky. On anything bigger
-// there is one page, the scrolling one, and the room is a place on it: you
-// step into it from its picture in the intro and back out again (the door,
-// below). Either way html[data-view] says which is showing. The inline gate
-// (intro-gate.ts) sets it, and html[data-phone], before the first paint;
-// globals.css shows one and hides the other; React reads them back through
-// useView() and usePhone().
+// The page and the room. There is one page, the scrolling one, and the room
+// is a place on it: you step into it from its picture in the intro and back
+// out again (the door, below), on every screen size. html[data-view] says
+// which is showing: "classic" (the page; set on <html> in layout.tsx) or
+// "room" (a first visit opens there, intro-gate.ts). globals.css shows one
+// and hides the other, and React reads it back through useView().
 
 import { useSyncExternalStore } from "react";
-import { VIEW_KEY } from "./intro-gate";
 
 export type SiteView = "room" | "classic";
 
@@ -23,7 +19,7 @@ export const PICK_EVENT = "yg:pick";
 /** Nav logo → room: back to the whole room. */
 export const HOME_EVENT = "yg:home";
 
-/** null on pages without the switch (the live homepage). */
+/** null if the page hasn't said (it always does: see layout.tsx). */
 export function currentView(): SiteView | null {
   const v = document.documentElement.dataset.view;
   return v === "room" || v === "classic" ? v : null;
@@ -32,13 +28,8 @@ export function currentView(): SiteView | null {
 export function setView(v: SiteView) {
   const el = document.documentElement;
   if (el.dataset.view === v) return;
-  try {
-    localStorage.setItem(VIEW_KEY, v);
-  } catch {
-    // storage blocked: still switch for this visit
-  }
   el.dataset.view = v;
-  // a fresh page either way: the room doesn't scroll, classic starts at the top
+  // a fresh page either way: the room doesn't scroll, the page starts at the top
   history.scrollRestoration = v === "room" ? "manual" : "auto";
   window.scrollTo({ top: 0, behavior: "instant" });
   window.dispatchEvent(new Event(VIEW_EVENT));
@@ -51,18 +42,6 @@ function subscribe(cb: () => void) {
 
 export function useView(): SiteView | null {
   return useSyncExternalStore(subscribe, currentView, () => null);
-}
-
-// ── Phone or not ─────────────────────────────────────────────────────────
-
-/** A phone keeps the two views and the switch between them; anything bigger has the one page. */
-export const isPhone = () => document.documentElement.hasAttribute("data-phone");
-
-// set once by the gate, before React: nothing to subscribe to
-const never = () => () => {};
-
-export function usePhone(): boolean {
-  return useSyncExternalStore(never, isPhone, () => false);
 }
 
 // ── The door: from the page into the room and back ───────────────────────
@@ -86,6 +65,26 @@ export function enterRoom(from: Box, rest: Box, depth: number) {
   document.documentElement.dataset.beenInside = "";
   setView("room");
   entry = null;
+}
+
+/** The room's picture on the page (HeroRoom) says where it sits at rest and how far it shifts against the mouse. */
+let door: (() => { rest: Box; depth: number } | null) | null = null;
+export function setDoor(find: typeof door) {
+  door = find;
+}
+
+/**
+ * A way out for a visit that didn't come in through the door (the opening
+ * starts in the room). The page has to be laid out to be measured, so it is
+ * shown for the length of this call: nothing paints in between.
+ */
+export function findWayOut() {
+  const el = document.documentElement;
+  const was = el.dataset.view;
+  el.dataset.view = "classic";
+  const found = door?.();
+  el.dataset.view = was;
+  if (found) exit = { box: found.rest, depth: found.depth, vw: window.innerWidth, vh: window.innerHeight };
 }
 
 /** The room, as it becomes the view: did someone just come in through the door? */

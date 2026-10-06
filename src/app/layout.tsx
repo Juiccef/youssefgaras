@@ -22,7 +22,7 @@ const archivo = Archivo({
 });
 
 export const metadata: Metadata = {
-  title: "Youssef Garas — Software Engineer",
+  title: "Youssef Garas | Software Engineer",
   description:
     "CS + Cybersecurity student at Georgia State University. Building intelligent systems at the intersection of AI, security, and full-stack engineering.",
 };
@@ -35,6 +35,8 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      // the page is what loads, except a first visit's opening (lab/intro-gate.ts); stepping into the room changes it (lab/view.ts)
+      data-view="classic"
       className={`${geistSans.variable} ${geistMono.variable} ${archivo.variable} h-full antialiased`}
       suppressHydrationWarning
     >

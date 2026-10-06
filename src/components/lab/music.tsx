@@ -38,7 +38,7 @@ export function NowPlaying({ onStop }: { onStop: () => void }) {
       <div className="mt-2 h-[200px] w-[200px] overflow-hidden rounded-md bg-black">
         <iframe
           src={src}
-          title={`${SONG.artist} – ${SONG.title} (official audio)`}
+          title={`${SONG.artist}, ${SONG.title} (official audio)`}
           allow="autoplay; encrypted-media"
           referrerPolicy="strict-origin-when-cross-origin"
           className="h-full w-full"

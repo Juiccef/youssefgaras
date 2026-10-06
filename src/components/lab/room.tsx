@@ -371,10 +371,10 @@ export function Room(): Device {
       points: faceRect(leftAt, POSTER.u, POSTER.v, POSTER.u + POSTER.w, POSTER.v + POSTER.h),
       face: quad(leftAt, POSTER.u, POSTER.v, POSTER.w, POSTER.h),
     },
-    { id: "print", label: "Photography — framed print", points: faceRect(rightAt, pu, pv, pu + pw, pv + ph), face: quad(rightAt, pu, pv, pw, ph) },
+    { id: "print", label: "Photography: framed print", points: faceRect(rightAt, pu, pv, pu + pw, pv + ph), face: quad(rightAt, pu, pv, pw, ph) },
     {
       id: "map",
-      label: "What runs in my homelab — network map",
+      label: "What runs in my homelab: network map",
       points: faceRect(rightAt, MAP.u, MAP.v, MAP.u + MAP.w, MAP.v + MAP.h),
       face: quad(rightAt, MAP.u, MAP.v, MAP.w, MAP.h),
     },
@@ -616,8 +616,8 @@ export function DeskItems({ x, y, z }: { x: number; y: number; z: number }): Dev
 
   const hotspots: Hotspot[] = [
     { id: "resume", label: "Resume", points: padBox(paper, 4), face: [turn(0, 0), turn(paper.w, 0), turn(0, paper.d)] },
-    { id: "badge", label: "Experience — work badge", points: padBox(badge, 5), face: flat(badge, 0.3) },
-    { id: "phone", label: "Contact — phone", points: padBox(phone, 5), face: flat(phone, 1.25) },
+    { id: "badge", label: "Experience: work badge", points: padBox(badge, 5), face: flat(badge, 0.3) },
+    { id: "phone", label: "Contact: phone", points: padBox(phone, 5), face: flat(phone, 1.25) },
   ];
 
   return { base, lights, occluders: [], hotspots };

@@ -14,7 +14,7 @@ export const PROJECTS: Project[] = [
   {
     name: "Facial Recognition Door Lock",
     description:
-      "Biometric physical access control system using OpenCV and KNN. Replaces keycard-based entry with real-time face identification — 95% accuracy via eigenface normalization on a live dataset.",
+      "Biometric physical access control system using OpenCV and KNN. Replaces keycard-based entry with real-time face identification, with 95% accuracy via eigenface normalization on a live dataset.",
     stack: ["Python", "OpenCV", "KNN", "Security", "JSON"],
     link: "https://facial-recognition-door-security-v5.vercel.app/",
     preview: "/previews/facial-recognition.png",
@@ -22,7 +22,7 @@ export const PROJECTS: Project[] = [
   {
     name: "GSU Panther Chatbot",
     description:
-      "Full-stack AI academic assistant for Georgia State students. GPT-4 grounded through Pinecone vector search — architected with data isolation and scoped retrieval to prevent prompt injection and hallucination.",
+      "Full-stack AI academic assistant for Georgia State students. GPT-4 grounded through Pinecone vector search, architected with data isolation and scoped retrieval to prevent prompt injection and hallucination.",
     stack: ["React", "Node.js", "Supabase", "Pinecone", "OpenAI API"],
     link: "https://frontend-4hefze9k9-youssefgaras-3531s-projects.vercel.app/",
     preview: "/previews/gsu-chatbot.png",
@@ -65,7 +65,7 @@ export const SITES: Site[] = [
     url: "https://www.aromaroastco.com/",
     displayUrl: "aromaroastco.com",
     description:
-      "Bilingual English/Arabic storefront for a Duluth roastery selling fresh-roasted nuts, Arabic sweets, coffee and spices — a rotating hero, category mega-menu, product cards with quick view and add-to-cart, and a gifting guide, in a warm Levantine-inspired design.",
+      "Bilingual English/Arabic storefront for a Duluth roastery selling fresh-roasted nuts, Arabic sweets, coffee and spices. It has a rotating hero, a category mega-menu, product cards with quick view and add-to-cart, and a gifting guide, in a warm Levantine-inspired design.",
     tags: ["Web Design", "E-commerce", "English / Arabic", "Responsive"],
     preview: "/previews/aroma.jpg",
   },
@@ -75,7 +75,7 @@ export const SITES: Site[] = [
     url: "https://www.peachparkingsolutions.com/",
     displayUrl: "peachparkingsolutions.com",
     description:
-      "Design-and-build marketing site for an Atlanta valet company — a bold photo-led hero, service breakdown, and a quote-request flow built to turn event planners and venues into booked clients.",
+      "Design-and-build marketing site for an Atlanta valet company, with a bold photo-led hero, a service breakdown, and a quote-request flow built to turn event planners and venues into booked clients.",
     tags: ["Web Design", "Responsive", "SEO", "Lead Capture"],
     preview: "/previews/peach-parking.jpg",
   },
@@ -86,7 +86,7 @@ export const EXPERIENCE = [
     role: "Endpoint Intern",
     company: "McKenney's, Inc.",
     location: "Atlanta, GA",
-    period: "May 2026 — Present",
+    period: "May 2026 to Present",
     type: "Internship",
     bullets: [
       "Administer enterprise-wide patch management with Quest KACE and PowerShell, rolling updates out across thousands of company devices while keeping them up.",
@@ -99,7 +99,7 @@ export const EXPERIENCE = [
     role: "Technical Director & Lead Graphics Operator",
     company: "Leading the Way",
     location: "Atlanta, GA",
-    period: "Sep 2022 — May 2026",
+    period: "Sep 2022 to May 2026",
     type: "Independent Contractor",
     bullets: [
       "Led live international TV broadcasts reaching 260M+ viewers across the Middle East via Nilesat, Arabsat, and Hotbird satellites.",
@@ -111,7 +111,7 @@ export const EXPERIENCE = [
     role: "Knack Tutor",
     company: "Georgia State University",
     location: "Atlanta, GA",
-    period: "Aug 2025 — May 2026",
+    period: "Aug 2025 to May 2026",
     type: "Part-time",
     bullets: [
       "Tutored students in Linear Algebra, CS 1302 (Java), and Physics 1211.",
@@ -198,16 +198,16 @@ export const HOMELAB = {
   host: "Lenovo ThinkStation P340 Tiny",
   os: "Debian 13 · headless · 24/7",
   services: [
-    { name: "Caddy", role: "reverse proxy — TLS from my own internal CA, 8+ services routed by subdomain" },
+    { name: "Caddy", role: "reverse proxy with TLS from my own internal CA, 8+ services routed by subdomain" },
     { name: "AdGuard Home", role: "network-wide DNS + ad/tracker blocking, DNS-over-HTTPS upstream, split-horizon internal zone" },
-    { name: "Tailscale", role: "WireGuard mesh VPN — remote access from behind CGNAT with subnet routing + split DNS" },
+    { name: "Tailscale", role: "WireGuard mesh VPN for remote access from behind CGNAT, with subnet routing + split DNS" },
     { name: "Docker Compose", role: "9+ container stack (media server with QuickSync transcoding, automation apps, Portainer) versioned in Git" },
-    { name: "restic → Backblaze B2", role: "encrypted, deduplicated offsite backups on a systemd timer — restores tested and used for real" },
+    { name: "restic → Backblaze B2", role: "encrypted, deduplicated offsite backups on a systemd timer, with restores tested and used for real" },
   ],
   hardening: ["SSH keys only (ed25519), no root/password login", "fail2ban", "ufw default-deny, LAN-scoped rules", "unattended security upgrades"],
   stories: [
-    "Traced a 502 to ufw's default-deny silently dropping Docker bridge traffic — fixed with a scoped allow rule.",
-    "An unpinned image jumped two major versions mid-migration and broke auth between services — pinned versions, documented it in the repo.",
-    "Migrated the whole stack (containers, volumes, DNS, CA) to the P340 with a planned IP cutover — no broken bookmarks.",
+    "Traced a 502 to ufw's default-deny silently dropping Docker bridge traffic, and fixed it with a scoped allow rule.",
+    "An unpinned image jumped two major versions mid-migration and broke auth between services. I pinned the versions and documented it in the repo.",
+    "Migrated the whole stack (containers, volumes, DNS, CA) to the P340 with a planned IP cutover, so no bookmarks broke.",
   ],
 };

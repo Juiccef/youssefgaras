@@ -1,8 +1,8 @@
 "use client";
 
-import { useRef, type CSSProperties } from "react";
+import { useEffect, useRef, type CSSProperties } from "react";
 import Image from "next/image";
-import { enterRoom, type Box } from "@/components/lab/view";
+import { enterRoom, setDoor, type Box } from "@/components/lab/view";
 
 // The room in the page's intro: a picture of the live room, floating in the
 // sky beside the name. It leans toward the mouse, and pressing it is the way
@@ -28,14 +28,28 @@ export function HeroRoom() {
   const wrap = useRef<HTMLDivElement>(null);
   const img = useRef<HTMLImageElement>(null);
 
+  // where the room sits at rest, with the page at the top: the way back out comes here
+  const restBox = (): Box | null => {
+    if (!wrap.current) return null;
+    const box = wrap.current.getBoundingClientRect();
+    return roomIn({ x: box.left, y: box.top + window.scrollY, w: box.width, h: (box.width * ROOM_STILL.h) / ROOM_STILL.w });
+  };
+
+  // the opening starts in the room and ends here, so it has to be able to find this spot
+  useEffect(() => {
+    setDoor(() => {
+      const rest = restBox();
+      return rest && { rest, depth: DEPTH };
+    });
+    return () => setDoor(null);
+  }, []);
+
   const stepInside = () => {
-    if (!wrap.current || !img.current) return;
+    const rest = restBox();
+    if (!rest || !img.current) return;
     // where the picture is on screen right now: floating, leaning, shifted by the mouse
     const now = img.current.getBoundingClientRect();
-    // and where it sits at rest, with the page at the top: the way back out comes here
-    const box = wrap.current.getBoundingClientRect();
-    const rest = { x: box.left, y: box.top + window.scrollY, w: box.width, h: (box.width * ROOM_STILL.h) / ROOM_STILL.w };
-    enterRoom(roomIn({ x: now.left, y: now.top, w: now.width, h: now.height }), roomIn(rest), DEPTH);
+    enterRoom(roomIn({ x: now.left, y: now.top, w: now.width, h: now.height }), rest, DEPTH);
   };
 
   return (

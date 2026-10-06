@@ -25,7 +25,7 @@ export const PARTS: Record<PartId, Part> = {
   patch: {
     kicker: "cabling",
     title: "Tecmojo 12-port Cat6 patch panel",
-    specs: ["0.5U keystone panel", "ports 3–10 patched down to the switch"],
+    specs: ["0.5U keystone panel", "ports 3 to 10 patched down to the switch"],
     amazon: "https://www.amazon.com/dp/B0F4K4SR9J",
     extra: { label: "The white jumpers: Cat6a slim, 0.5 ft", href: "https://www.amazon.com/dp/B0FR99JZG2" },
   },

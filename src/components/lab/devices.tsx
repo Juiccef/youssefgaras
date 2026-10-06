@@ -219,6 +219,6 @@ export function Desk({ x, y, seed }: { x: number; y: number; seed: number }): De
       boxHull(x, y, 0, w, d, top),
       boxHull(x + 32, y + 4, top, 52, 50, CRT.h + 3),
     ],
-    hotspots: [{ id: "monitor", label: "Projects — the CRT", points: faceRect(frontAt, 0, 0, CRT.w, CRT.h), face }],
+    hotspots: [{ id: "monitor", label: "Projects: the CRT", points: faceRect(frontAt, 0, 0, CRT.w, CRT.h), face }],
   };
 }

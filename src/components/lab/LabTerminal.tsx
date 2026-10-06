@@ -123,7 +123,7 @@ function Motd({ user }: { user: string }) {
       <p>&nbsp;</p>
       <p>
         {"  "}
-        <B>Youssef Garas</B> — portfolio. Everything below is real and running:
+        <B>Youssef Garas</B>, portfolio. Everything below is real and running:
       </p>
       {/* hanging indent: on narrow screens the description wraps under itself */}
       {RUNNING.map(([s, d]) => (
@@ -323,7 +323,7 @@ export const LabTerminal = forwardRef<LabTerminalHandle, Props>(function LabTerm
       case "about":
         return push(
           <p className="text-white">
-            I&apos;m Youssef Garas — a cybersecurity engineer and 2026 Computer Science graduate of Georgia State University.
+            I&apos;m Youssef Garas, a cybersecurity engineer and 2026 Computer Science graduate of Georgia State University.
           </p>,
           <p>
             CCNA and CompTIA Security+ certified. I build systems at the intersection of AI and security, run my own homelab,
@@ -333,7 +333,7 @@ export const LabTerminal = forwardRef<LabTerminalHandle, Props>(function LabTerm
       case "whoami":
         return push(<p>{user}</p>);
       case "education":
-        return push(<p>Georgia State University — B.S. Computer Science, cybersecurity concentration · class of 2026 · 3.90 GPA</p>);
+        return push(<p>Georgia State University · B.S. Computer Science, cybersecurity concentration · class of 2026 · 3.90 GPA</p>);
       case "experience":
         return push(
           ...EXPERIENCE.map((e) => (
@@ -346,7 +346,7 @@ export const LabTerminal = forwardRef<LabTerminalHandle, Props>(function LabTerm
         return push(
           ...PROJECTS.map((p) => (
             <p key={p.name}>
-              <Link href={p.link}>{p.name}</Link> <Dim>— {p.stack.slice(0, 3).join(", ")}</Dim>
+              <Link href={p.link}>{p.name}</Link> <Dim>· {p.stack.slice(0, 3).join(", ")}</Dim>
             </p>
           )),
         );
@@ -416,7 +416,7 @@ export const LabTerminal = forwardRef<LabTerminalHandle, Props>(function LabTerm
           jump(arg);
           return push(<Dim>opening {arg}…</Dim>);
         }
-        return push(<p>open: no such section: {arg || "(none)"} — try {SECTIONS.join(", ")}</p>);
+        return push(<p>open: no such section: {arg || "(none)"}. try {SECTIONS.join(", ")}</p>);
       case "ls":
         return push(<p className="whitespace-pre-wrap">about.txt   certs/   experience/   projects/   resume.pdf   services.md</p>);
       case "pwd":

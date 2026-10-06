@@ -7,7 +7,7 @@ import { useGSAP } from "@gsap/react";
 import { DrawSVGPlugin } from "gsap/DrawSVGPlugin";
 import { MotionPathPlugin } from "gsap/MotionPathPlugin";
 import { CABLE_LENGTH, HOTSPOT_BY_ID, LabHotspots, LabScene, PART_BOXES, ROOM_BOUNDS, SINGLE_LIGHTS, WAN_BLOCK_AT } from "./LabScene";
-import { HOST, LabTerminal, type LabTerminalHandle } from "./LabTerminal";
+import { LabTerminal, type LabTerminalHandle } from "./LabTerminal";
 import { IDENTITY, boundsOf, clamp, cssMatrix, frame, lerpMat, project, quadMatrix, viewAt, type Mat, type Rect, type View } from "./camera";
 import { K, iso } from "./iso";
 import { RACK_SCALE } from "./mylab";
@@ -17,18 +17,17 @@ import { LAB_SESSION_KEY } from "./intro-gate";
 import { FocusSheet } from "./sheets";
 import { NowPlaying } from "./music";
 import { HINTS_KEY, LabMarkers, tipFor } from "./hints";
-import { HOME_EVENT, PICK_EVENT, VIEW_EVENT, currentView, isPhone, setView, takeEntry, wayOut, type Box } from "./view";
+import { HOME_EVENT, PICK_EVENT, VIEW_EVENT, currentView, findWayOut, setView, takeEntry, wayOut, type Box } from "./view";
 
 gsap.registerPlugin(useGSAP, DrawSVGPlugin, MotionPathPlugin);
 
-/** Wide screens: headline on the left, room on the right. Keep in sync with the `side:` variant in globals.css. */
-const SIDE_MQ = "(min-width: 640px) and (min-aspect-ratio: 5/4)";
-/** Touch screens: tapping the room zooms in at that spot; tiny objects get zoomed in on first. */
+/** Touch screens: tiny objects get zoomed in on before they open. */
 const TOUCH_MQ = "(pointer: coarse)";
 
 // ─── Session ─────────────────────────────────────────────────────────────
-// { user, at, active }. `active` → returning visitor skips the login and
-// gets a quick "session restored" power-up. `exit` clears it.
+// { user, at, active } in localStorage. `active`: this visitor has seen the
+// room power on, so the site opens on the page instead of the start screen
+// (intro-gate.ts). `exit` clears it.
 
 const STORE = LAB_SESSION_KEY;
 type Session = { user: string; at: number; active: boolean };
@@ -76,12 +75,6 @@ const AMBIENT: { devices: string[]; cables?: string[] }[] = [
   { devices: ["desk", "deskitems", "camera", "record"], cables: ["desk"] },
 ];
 
-/**
- * Cinematic power-up: the name and the nav come in this many seconds before
- * the camera has finished pulling back (its last stretch is barely moving).
- */
-const HEAD_LEAD = 0.7;
-
 const bootLine = (host: string, msg: string) => (
   <p className="flex text-white/60">
     <span className="shrink-0 whitespace-pre">
@@ -91,7 +84,7 @@ const bootLine = (host: string, msg: string) => (
   </p>
 );
 
-/** "off": the visitor is in classic view and the lab hasn't been started. */
+/** "off": the visitor is on the page and the lab hasn't been started. */
 type Phase = "init" | "off" | "intro" | "booting" | "live";
 
 const HUD_BUTTONS = [
@@ -102,9 +95,15 @@ const HUD_BUTTONS = [
 ] as const;
 
 type LabApi = {
-  /** First look at the room: the start screen playing itself, a restored session, or (reduced motion) the room straight away. */
-  start: () => void;
-  powerUp: (fast: boolean, who: string, onDone?: () => void, logged?: boolean, onShow?: () => void) => void;
+  /** Into the room from the page (view.ts), already on: it takes over where its picture was and the camera goes in. */
+  enter: (from: Box | null) => void;
+  /** The opening: put the room where it will power on (where its picture sits on the page, if that's on screen). */
+  frameOpening: () => void;
+  /** The opening is over: the page takes over (`now`: without a camera move, when the room was never shown). */
+  toPage: (now?: boolean) => void;
+  /** Everything on at once: no start screen, no boot. */
+  lightUp: () => void;
+  powerUp: (fast: boolean, who: string, onDone?: () => void, logged?: boolean) => void;
   skipBoot: () => void;
   powerDown: (onDone: () => void) => void;
   consoleBoot: (onDone: () => void, quick?: boolean) => void;
@@ -112,29 +111,25 @@ type LabApi = {
   openTerm: () => void;
   closeTerm: (onDone: () => void) => void;
   showLogin: () => void;
-  reveal: () => void;
   openFocus: (id: string) => void;
   closeFocus: (id: string, onDone: () => void) => void;
   zoomBy: (factor: number, clientX?: number, clientY?: number) => void;
   /** Zoom in on a point and bring it to the middle of the screen. */
   zoomAt: (clientX: number, clientY: number, factor: number) => void;
   nudge: (dx: number, dy: number) => void;
-  /** Step inside: the room fills the screen and the headline and nav step aside. */
+  /** The camera goes in: the room fills the screen. */
   stepIn: () => void;
-  /** In through the door from the page (view.ts): the room takes over where its picture was, already on, and the camera goes straight in. */
-  enter: (from: Box) => void;
-  /** Inside: back to where you stood when you stepped in. */
+  /** Back to where you stood when you came in. */
   resetView: () => void;
-  /** Step outside: back to the whole room (the headline comes back). */
+  /** Step outside: back out to the page. */
   home: () => void;
   /** Smallest side of an object's hit area on screen, in px. */
   hotspotPx: (id: string) => number;
   poseOf: (id: PartId) => Pose;
   /** The label over an object (null hides it); `flash` hides it again after a moment. */
   showTip: (id: string | null, flash?: boolean) => void;
-  /** Leaving for classic view: drop whatever was open and stop the room's loops. */
+  /** Leaving for the page: drop whatever was open and stop the room's loops. */
   sleep: () => void;
-  wake: () => void;
 };
 
 export function LabHero() {
@@ -152,6 +147,8 @@ export function LabHero() {
   const phaseRef = useRef<Phase>("init");
   /** The start screen is playing itself (a first visit): nobody has to type. */
   const autoRef = useRef(false);
+  /** The opening is running: a first visit starts in the room and ends on the page. */
+  const openingRef = useRef(false);
   const focusRef = useRef<string | null>(null);
   const zoomedRef = useRef(false);
   const termRef = useRef(false);
@@ -160,15 +157,13 @@ export function LabHero() {
   const [phase, setPhase] = useState<Phase>("init");
   /** Who the start screen logs in as while it plays itself; null when the visitor is at the keyboard. */
   const [autoIntro, setAutoIntro] = useState<string | null>(null);
-  const [user, setUser] = useState("guest");
+  const [opening, setOpening] = useState(false);
   const [termOpen, setTermOpen] = useState(false);
   // The object being looked at up close (a hotspot id), and whether the
-  // camera is zoomed into the room (headline hidden, drag to look around)
+  // camera is inside the room (nav hidden, drag to look around)
   const [focus, setFocus] = useState<string | null>(null);
   const [zoomed, setZoomed] = useState(false);
   const [hudHint, setHudHint] = useState(false);
-  // The "step inside" key pings until the visitor has been inside once
-  const [beenInside, setBeenInside] = useState(false);
   // The record player is playing Doomsday (its YouTube player is in the now-playing card)
   const [music, setMusic] = useState(false);
   // Markers on the objects: once the room is up, until the visitor opens something
@@ -251,21 +246,9 @@ export function LabHero() {
         placeTip();
       };
 
-      /** The whole room, beside (wide screens) or under (phones) the headline. */
-      const restView = (m = M): View => {
-        const head = hero.querySelector("[data-head]")?.getBoundingClientRect();
-        let r: Rect;
-        if (window.matchMedia(SIDE_MQ).matches) {
-          const left = clamp(head ? head.right - m.hl + 24 : 0, m.hw * 0.36, m.hw * 0.55);
-          r = { x: left, y: 72, w: m.hw - left - 24, h: m.hh - 72 - 44 };
-        } else {
-          const top = head ? head.bottom - m.ht + 18 : m.hh * 0.42;
-          r = { x: 10, y: top, w: m.hw - 20, h: Math.max(m.hh - top - 58, m.hh * 0.3) };
-          // hug the headline instead of floating in the middle of the leftover space
-          r.h = Math.min(r.h, (ROOM_BOUNDS.h * r.w) / ROOM_BOUNDS.w);
-        }
-        return frame(ROOM_BOUNDS, { x: r.x - m.ox, y: r.y - m.oy, w: r.w, h: r.h }, m.ew, m.eh);
-      };
+      /** The whole room, centred: how it's seen while it powers on, and as far out as the camera goes. */
+      const restView = (m = M): View =>
+        frame(ROOM_BOUNDS, { x: 16 - m.ox, y: 64 - m.oy, w: m.hw - 32, h: m.hh - 64 - 48 }, m.ew, m.eh);
 
       /** Close on an object: centred for close-ups, the whole rack beside the card for parts. */
       const focusView = (id: string, m = M): View => {
@@ -285,8 +268,7 @@ export function LabHero() {
       };
 
       // ── Zooming into the room: wheel/pinch/keys, drag to look around ──
-      // The resting framing is the floor: zoom out to it and the camera
-      // settles back home and the headline returns.
+      // The whole room is the floor: zoom out to it and you step back outside.
       const restScale = (m = M) => m.ew / restView(m).w;
       const sizeMarkers = () => void (mkSize = clamp(restScale(M) / 0.9, 0.6, 1));
       const scales = (m = M) => {
@@ -365,49 +347,44 @@ export function LabHero() {
         yTo?.(0);
       };
 
-      // ── Zoom state: the headline steps aside while you're zoomed in ──
+      // ── Inside the room: the nav steps aside and you can drag to look around ──
       let hinted = false;
-      const markZoomed = (z: boolean, animate = true) => {
+      const markZoomed = (z: boolean) => {
         if (z === zoomed) return;
         zoomed = z;
         zoomedRef.current = z;
         setZoomed(z);
-        if (!animate) return;
-        if (z) {
-          holdStill();
-          gsap.to("[data-hl]", { autoAlpha: 0, x: -24, duration: 0.35 * d(), stagger: 0.03, ease: "power2.in", overwrite: true });
-          // the first time in, say how to get around (once per visit)
-          if (!hinted) {
-            hinted = true;
-            setBeenInside(true);
-            setHudHint(true);
-            gsap.delayedCall(5, () => setHudHint(false));
-          }
-        } else {
-          gsap.to("[data-hl]", { autoAlpha: 1, x: 0, y: 0, duration: 0.5 * d(), stagger: 0.05, delay: 0.2 * d(), ease: "power3.out", overwrite: true });
+        if (!z) return;
+        holdStill();
+        // the first time in, say how to get around (once per visit)
+        if (!hinted) {
+          hinted = true;
+          setHudHint(true);
+          gsap.delayedCall(5, () => setHudHint(false));
         }
       };
 
       const glide = (v: View, duration = 0.35) =>
         gsap.to(cam, { ...v, duration: duration * d(), ease: "power3.out", overwrite: true, onUpdate: apply });
 
-      /** Anything bigger than a phone has one page, and the room is a place on it (view.ts): outside the room is the page. */
-      const onePage = () => !isPhone();
+      // Stepping outside (the room is a place on the page, view.ts): the camera
+      // pulls back to where the room's picture sits on the page, and the page
+      // takes over on the same spot.
+      /** Where the room's picture sits on the page, as a camera view (null when that isn't known). */
+      const doorView = (): View | null => {
+        const out = wayOut();
+        return out ? frame(ROOM_BOUNDS, { x: out.x - M.hl - M.ox, y: out.y - M.ht - M.oy, w: out.w, h: out.h }, M.ew, M.eh) : null;
+      };
 
-      // Stepping outside there: the camera pulls back to where the room's
-      // picture sits on the page, and the page takes over on the same spot.
-      const leave = () => {
+      const leave = (duration = 0.9) => {
         if (busy.current) return;
         busy.current = true;
         showTip(null);
-        const out = wayOut();
-        const target = out
-          ? frame(ROOM_BOUNDS, { x: out.x - M.hl - M.ox, y: out.y - M.ht - M.oy, w: out.w, h: out.h }, M.ew, M.eh)
-          : restView(M);
+        holdStill();
         gsap.to("[data-dock]", { autoAlpha: 0, duration: 0.2 * d(), overwrite: true });
         gsap.to(cam, {
-          ...target,
-          duration: 0.9 * d(),
+          ...(doorView() ?? restView(M)),
+          duration: duration * d(),
           ease: "power3.inOut",
           overwrite: true,
           onUpdate: apply,
@@ -422,23 +399,10 @@ export function LabHero() {
         });
       };
 
-      const goHome = (duration = 0.7) => {
-        if (onePage()) return leave();
-        markZoomed(false);
-        gsap.to(cam, {
-          ...restView(M),
-          duration: duration * d(),
-          ease: "power3.inOut",
-          overwrite: true,
-          onUpdate: apply,
-          onComplete: () => void (parallax = true),
-        });
-      };
-
-      /** Move the camera to `v` (gliding when `glideFor` > 0). Back at the resting size, it goes home. */
+      /** Move the camera to `v` (gliding when `glideFor` > 0). Zoomed all the way out, you're back outside. */
       const zoomTo = (v: View, glideFor = 0) => {
         if (M.ew / v.w <= restScale(M) * 1.04) {
-          if (zoomed) goHome();
+          if (zoomed) leave();
           return;
         }
         markZoomed(true);
@@ -529,22 +493,11 @@ export function LabHero() {
         gsap.set("[data-pkt], [data-blocked-pkt], [data-fw-alert]", { opacity: 0 });
       });
 
-      const reveal = safe(() => {
-        gsap.fromTo(
-          "[data-hl]",
-          { autoAlpha: 0, y: 16 },
-          { autoAlpha: 1, x: 0, y: 0, duration: 0.75, stagger: 0.08, ease: "power3.out", delay: 0.1 },
-        );
-      });
-
       let consoleTl: gsap.core.Animation | null = null;
       let bootTl: gsap.core.Timeline | null = null;
 
-      /**
-       * `logged`: the console already printed the boot log, so don't print it again.
-       * `onShow` (cinematic): called a little before the end, see HEAD_LEAD.
-       */
-      const powerUp = safe((fast: boolean, who: string, onDone?: () => void, logged = false, onShow?: () => void) => {
+      /** `logged`: the console already printed the boot log, so don't print it again. */
+      const powerUp = safe((fast: boolean, who: string, onDone?: () => void, logged = false) => {
         const tl = gsap.timeline({
           onComplete: () => {
             parallax = true;
@@ -587,9 +540,8 @@ export function LabHero() {
         t += AMBIENT.length * gap;
 
         tl.call(startTraffic, [], t);
-        tl.call(() => term.current?.print(<p className="mt-1 text-white">lab online — welcome, {who}.</p>), [], t);
+        tl.call(() => term.current?.print(<p className="mt-1 text-white">lab online. welcome, {who}.</p>), [], t);
         tl.to({}, { duration: fast ? 0.1 : 0.5 });
-        if (onShow) tl.call(onShow, [], Math.max(0, tl.duration() - HEAD_LEAD));
       });
 
       // "skip intro" mid-boot: finish the console + boot instantly
@@ -605,14 +557,13 @@ export function LabHero() {
         gsap
           .timeline({
             onComplete: () => {
-              markZoomed(false, false);
+              markZoomed(false);
               M = measure();
               Object.assign(cam, restView(M));
               apply();
               onDone();
             },
           })
-          .to("[data-hl]", { autoAlpha: 0, y: -10, duration: 0.35, stagger: 0.04, ease: "power2.in" }, 0)
           .to(termWrap.current, { autoAlpha: 0, duration: 0.25 }, 0)
           .set("[data-tag]", { opacity: 0 }, 0)
           .to("[data-cable] path", { drawSVG: "100% 100%", duration: 0.7, ease: "power2.in" }, 0)
@@ -699,7 +650,7 @@ export function LabHero() {
         returnView = zoomed ? { ...cam } : restView(M);
         const target = focusView(id, M);
         const tl = gsap.timeline({ onComplete: () => void (busy.current = false) });
-        tl.to(zoomed ? "[data-dock]" : "[data-hl], [data-dock]", { autoAlpha: 0, duration: 0.3 * d() }, 0);
+        tl.to("[data-dock]", { autoAlpha: 0, duration: 0.3 * d() }, 0);
         tl.to(cam, { ...target, duration: 0.95 * d(), ease: "power3.inOut", onUpdate: apply }, 0);
         tl.to(dim.current, { autoAlpha: isPart(id) ? 1 : 0.85, duration: 0.5 * d() }, 0.35 * d());
         if (isPart(id)) {
@@ -753,7 +704,7 @@ export function LabHero() {
         }
         tl.to(dim.current, { autoAlpha: 0, duration: 0.5 * d() }, 0.25 * d());
         tl.to(cam, { ...back, duration: 0.9 * d(), ease: "power3.inOut", onUpdate: apply }, 0.25 * d());
-        tl.to(zoomed ? "[data-dock]" : "[data-hl], [data-dock]", { autoAlpha: 1, duration: 0.4 * d() }, 0.85 * d());
+        tl.to("[data-dock]", { autoAlpha: 1, duration: 0.4 * d() }, 0.85 * d());
       });
 
       const zoomBy = safe((f: number, cx?: number, cy?: number) => {
@@ -787,39 +738,56 @@ export function LabHero() {
         gsap.to(cam, { ...insideView(), duration: 1.05 * d(), ease: "power3.inOut", overwrite: true, onUpdate: apply });
       });
 
-      // In through the door from the page (view.ts). The room is lit in its
-      // picture there, so it's simply on here too: no start screen, no boot.
-      // It appears exactly where the picture was, and the camera goes in.
-      const enter = safe((from: Box) => {
+      // In through the door from the page (view.ts) with the room already on,
+      // as it is in its picture: it appears exactly where the picture was and
+      // the camera goes in. (With no picture to come from, it's simply there.)
+      const lightUp = safe(() => {
+        consoleTl?.kill();
+        bootTl?.kill();
+        gsap.killTweensOf(termWrap.current);
+        gsap.set("[data-base], [data-lights], [data-unit], [data-pool], [data-cable]:not([data-pkt])", { opacity: 1 });
+        gsap.set("[data-cable] path", { drawSVG: "0% 100%" });
+        gsap.set(sceneWrap.current, { autoAlpha: 1, scale: 1 });
+        gsap.set(termWrap.current, { autoAlpha: 0 });
+        startTraffic();
+      });
+
+      const enter = safe((from: Box | null) => {
         M = measure();
         if (!shown()) return;
         sizeMarkers();
         if (phaseRef.current === "live") {
           loops.current.forEach((t) => t.resume());
         } else {
-          consoleTl?.kill();
-          bootTl?.kill();
-          gsap.killTweensOf(termWrap.current);
-          gsap.set("[data-base], [data-lights], [data-unit], [data-pool], [data-cable]:not([data-pkt])", { opacity: 1 });
-          gsap.set("[data-cable] path", { drawSVG: "0% 100%" });
-          gsap.set(sceneWrap.current, { autoAlpha: 1, scale: 1 });
-          gsap.set(termWrap.current, { autoAlpha: 0 });
-          const who = readSession()?.user ?? "guest";
-          setUser(who);
+          // not powered on in this visit yet: no start screen, no boot, it's just on
+          lightUp();
+          const session = readSession();
+          const who = session?.user ?? "guest";
           term.current?.login(who);
+          if (session)
+            term.current?.print(
+              <p>Last login: {fmtLogin(session.at)} on tty1</p>,
+              <p>
+                session restored. welcome back, <span className="font-bold text-white">{who}</span>. type{" "}
+                <span className="font-bold text-white">help</span> to look around.
+              </p>,
+              <p>&nbsp;</p>,
+            );
           writeSession({ user: who, at: Date.now(), active: true });
           autoRef.current = false;
           setAutoIntro(null);
           goPhase("live");
           setReady(true);
-          startTraffic();
         }
-        // the headline belongs to the room seen from outside: it stays out of the way
-        gsap.set("[data-hl]", { autoAlpha: 0 });
         gsap.killTweensOf(cam);
+        markZoomed(true);
+        if (!from) {
+          Object.assign(cam, insideView());
+          apply();
+          return;
+        }
         Object.assign(cam, frame(ROOM_BOUNDS, { x: from.x - M.hl - M.ox, y: from.y - M.ht - M.oy, w: from.w, h: from.h }, M.ew, M.eh));
         apply();
-        markZoomed(true);
         busy.current = true;
         gsap.to(cam, {
           ...insideView(),
@@ -846,7 +814,49 @@ export function LabHero() {
       const home = safe(() => {
         if (!zoomed) return;
         M = measure();
-        goHome(0.8);
+        leave();
+      });
+
+      // ── The opening ─────────────────────────────────────────────────
+      // A first visit starts here in the room, on the console start screen
+      // (intro-gate.ts). It plays itself (logs in as guest and runs `boot`,
+      // see LabTerminal), the room powers on, and the page takes over around
+      // it. Nobody has to type.
+      const intro = () => {
+        M = measure();
+        if (shown()) {
+          sizeMarkers();
+          Object.assign(cam, restView(M));
+          apply();
+        }
+        gsap.set(sceneWrap.current, { autoAlpha: 0 });
+        openingRef.current = true;
+        setOpening(true);
+        autoRef.current = true;
+        setAutoIntro(readSession()?.user ?? "guest");
+        goPhase("intro");
+        // the start screen is already up: the gate has been showing the server's copy of it
+        gsap.set(termWrap.current, { autoAlpha: 1 });
+        delete document.documentElement.dataset.opening;
+      };
+
+      /** The room powered on right where its picture sits on the page (so the page only has to appear around it). */
+      let inPlace = false;
+      const frameOpening = safe(() => {
+        findWayOut();
+        M = measure();
+        const out = wayOut();
+        // on a small screen the picture is further down the page than the screen is tall: power on centred instead
+        inPlace = !!out && out.x >= 0 && out.y >= 0 && out.x + out.w <= M.hw && out.y + out.h <= M.hh;
+        Object.assign(cam, (inPlace && doorView()) || restView(M));
+        apply();
+      });
+
+      const toPage = safe((now = false) => {
+        if (now) return void setView("classic");
+        M = measure();
+        // the mouse may have moved the picture since, and on a small screen the room still has to get there
+        leave(inPlace ? 0.45 : 0.9);
       });
 
       const hotspotPx = (id: string) => {
@@ -936,74 +946,23 @@ export function LabHero() {
       hero.addEventListener("click", onClickCapture, true);
       hero.addEventListener("wheel", onWheel, { passive: false });
 
-      // ── Classic view: the room sleeps, and wakes up where it was ────
+      // ── Back on the page: the room sleeps ───────────────────────────
       const sleep = safe(() => {
         gsap.killTweensOf(cam);
         showTip(null);
         holdStill();
-        markZoomed(false, false);
+        markZoomed(false);
         returnView = null;
         busy.current = false;
         gsap.set(dim.current, { autoAlpha: 0 });
         gsap.set("[data-vinyl]", { opacity: 1 });
-        if (phaseRef.current === "live") gsap.set("[data-hl], [data-dock]", { autoAlpha: 1, x: 0, y: 0 });
+        if (phaseRef.current === "live") gsap.set("[data-dock]", { autoAlpha: 1 });
         if (termRef.current) gsap.set(termWrap.current, { autoAlpha: 0, yPercent: -100 });
         loops.current.forEach((t) => t.pause());
       });
-      const wake = safe(() => {
-        loops.current.forEach((t) => t.resume());
-        if (phaseRef.current === "live") parallax = true;
-      });
-
-      // ── First look: the start screen plays itself, a session is restored, or (reduced motion) the room is just there ──
-      const start = safe(() => {
-        M = measure();
-        if (shown()) {
-          sizeMarkers();
-          Object.assign(cam, restView(M));
-          apply();
-        }
-        const session = readSession();
-        if (reduced.current) {
-          gsap.set("[data-base], [data-lights], [data-unit], [data-pool], [data-cable]", { opacity: 1 });
-          gsap.set(sceneWrap.current, { autoAlpha: 1 });
-          gsap.set(termWrap.current, { autoAlpha: 0 });
-          gsap.set("[data-hl]", { autoAlpha: 1 });
-          if (session) setUser(session.user);
-          term.current?.login(session?.user ?? "guest");
-          goPhase("live");
-          setReady(true);
-        } else if (session?.active) {
-          setUser(session.user);
-          goPhase("live");
-          gsap.set(termWrap.current, { autoAlpha: 0 });
-          reveal();
-          term.current?.login(session.user);
-          term.current?.print(
-            <p>Last login: {fmtLogin(session.at)} on tty1</p>,
-            <p>
-              session restored — welcome back, <span className="font-bold text-white">{session.user}</span>. type{" "}
-              <span className="font-bold text-white">help</span> to look around.
-            </p>,
-            <p>&nbsp;</p>,
-          );
-          writeSession({ ...session, at: Date.now() });
-          powerUp(true, session.user, () => setReady(true));
-        } else {
-          // First visit: the console start screen plays itself (it logs in as guest and
-          // runs `boot`, see LabTerminal), then the room powers on. Nobody has to type.
-          gsap.set(sceneWrap.current, { autoAlpha: 0 });
-          term.current?.reset();
-          autoRef.current = true;
-          setAutoIntro(session?.user ?? "guest");
-          goPhase("intro");
-          gsap.fromTo(termWrap.current, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.35, ease: "power2.out" });
-        }
-      });
-
       lab.current = {
-        start, powerUp, skipBoot, powerDown, consoleBoot, hideConsole, openTerm, closeTerm, showLogin, reveal,
-        openFocus, closeFocus, zoomBy, zoomAt, stepIn, enter, resetView, nudge, home, hotspotPx, poseOf, showTip, sleep, wake,
+        enter, frameOpening, toPage, lightUp, powerUp, skipBoot, powerDown, consoleBoot, hideConsole, openTerm, closeTerm, showLogin,
+        openFocus, closeFocus, zoomBy, zoomAt, stepIn, resetView, nudge, home, hotspotPx, poseOf, showTip, sleep,
       };
 
       // ── Keep the room framed ────────────────────────────────────────
@@ -1024,7 +983,7 @@ export function LabHero() {
             const [cx, cy] = [cam.x + cam.w / 2, cam.y + cam.h / 2];
             Object.assign(cam, clampView({ x: cx - M.ew / s / 2, y: cy - M.eh / s / 2, w: M.ew / s, h: M.eh / s }));
           } else {
-            markZoomed(false, false);
+            markZoomed(false);
             Object.assign(cam, restView(M));
           }
           apply();
@@ -1041,11 +1000,12 @@ export function LabHero() {
         hintsDoneRef.current = false;
       }
       setHintsDone(hintsDoneRef.current);
-      // In classic view the room waits until the visitor switches to it
-      if (currentView() === "classic") goPhase("off");
-      else start();
+      // A first visit opens here (the gate put the room up); otherwise the page
+      // comes first and the room waits until someone steps inside
+      if (currentView() === "room") intro();
+      else goPhase("off");
 
-      // Gentle parallax on desktop
+      // Gentle parallax on desktop, while the whole room is in view (as it powers on)
       let onMove: ((e: PointerEvent) => void) | null = null;
       if (!reduced.current && window.matchMedia("(pointer: fine)").matches && sceneWrap.current) {
         const qx = gsap.quickTo(sceneWrap.current, "x", { duration: 1.4, ease: "power3" });
@@ -1083,37 +1043,50 @@ export function LabHero() {
     const name = who || "guest";
     // the start screen was playing itself: its boot log goes by briskly too
     const auto = autoRef.current;
+    const first = openingRef.current;
     autoRef.current = false;
     setAutoIntro(null);
     term.current?.login(name);
-    setUser(name);
     writeSession({ user: name, at: Date.now(), active: true });
     phaseRef.current = "booting";
     setPhase("booting");
 
-    // The name and the nav arrive; the room takes clicks once the camera has settled
-    const show = () => {
+    // The room is up. In the opening the page takes over next; any other time
+    // (rebooted from its console) the camera goes inside (the effect below).
+    const goLive = () => {
       phaseRef.current = "live";
       setPhase("live");
-      lab.current?.reveal();
-    };
-    const settle = () => {
       busy.current = false;
       window.setTimeout(() => setReady(true), 700);
-    };
-    const goLive = () => {
-      show();
-      settle();
     };
 
     if (fast) {
       lab.current?.hideConsole(true, () => {
-        goLive();
-        lab.current?.powerUp(true, name);
+        if (first) {
+          // the opening, skipped: the room is simply on, and it's straight to the page
+          lab.current?.lightUp();
+          goLive();
+          lab.current?.toPage(true);
+        } else {
+          goLive();
+          lab.current?.powerUp(true, name);
+        }
       });
     } else {
       term.current?.print(<p className="text-[#8a8a8a]">powering on the homelab…</p>);
-      lab.current?.consoleBoot(() => lab.current?.powerUp(false, name, settle, true, show), auto);
+      lab.current?.consoleBoot(() => {
+        if (!first) return lab.current?.powerUp(false, name, goLive, true);
+        lab.current?.frameOpening();
+        lab.current?.powerUp(
+          false,
+          name,
+          () => {
+            goLive();
+            lab.current?.toPage();
+          },
+          true,
+        );
+      }, auto);
     }
   }, []);
 
@@ -1150,17 +1123,7 @@ export function LabHero() {
     else lab.current?.closeTerm(() => {});
   }, []);
 
-  // ── Inside / outside ─────────────────────────────────────────────────
-
-  const stepInside = () => {
-    if (busy.current || focusRef.current) return;
-    if (termRef.current) {
-      termRef.current = false;
-      setTermOpen(false);
-      lab.current?.closeTerm(() => {});
-    }
-    lab.current?.stepIn();
-  };
+  // ── Back outside ─────────────────────────────────────────────────────
 
   const stepOutside = () => {
     if (busy.current || focusRef.current) return;
@@ -1220,9 +1183,8 @@ export function LabHero() {
     });
   }, []);
 
-  // Room ⇄ classic (the switch in the nav). Leaving: anything open closes and
-  // the room sleeps (the music keeps playing). Coming back for the first time
-  // starts the room; otherwise it's just as you left it.
+  // The page ⇄ the room (view.ts). Back to the page: anything open closes and
+  // the room sleeps (the music keeps playing), and the opening is over.
   useEffect(() => {
     const onView = () => {
       const v = currentView();
@@ -1239,26 +1201,24 @@ export function LabHero() {
           phaseRef.current = "off";
           setPhase("off");
         }
+        openingRef.current = false;
+        setOpening(false);
       } else if (v === "room") {
-        // through the door from the page, or by the switch (phones)
-        const from = takeEntry();
-        if (from) l.enter(from);
-        else if (phaseRef.current === "off") l.start();
-        else l.wake();
+        l.enter(takeEntry());
       }
     };
     window.addEventListener(VIEW_EVENT, onView);
     return () => window.removeEventListener(VIEW_EVENT, onView);
   }, []);
 
-  // One page (anything bigger than a phone): the room is only ever seen from
-  // inside. If it has come back up some other way (rebooted from its
-  // console), go straight in.
+  // The room is only ever used from inside: when it comes back up after being
+  // rebooted from its console, the camera goes in. (The opening ends on the
+  // page instead.)
   useEffect(() => {
-    if (phase === "live" && !isPhone() && currentView() === "room" && !zoomedRef.current) lab.current?.stepIn();
+    if (phase === "live" && currentView() === "room" && !zoomedRef.current && !openingRef.current) lab.current?.stepIn();
   }, [phase]);
 
-  // The nav in room view: its links open the matching object, the logo goes back to the whole room
+  // The nav in the room: its links open the matching object, the logo steps back outside
   useEffect(() => {
     const onPick = (e: Event) => {
       const id = (e as CustomEvent<string>).detail;
@@ -1282,9 +1242,8 @@ export function LabHero() {
     };
   }, [pick, closeFocus, toggleTerm]);
 
-  // Start screen is just the terminal on black: no scrolling and no nav until
-  // the lab is on. The inline gate (intro-gate.ts) already locked the page
-  // before React loaded, so "init" leaves it alone.
+  // The start screen is just the terminal on black: no nav until the lab is on.
+  // (For the opening the gate already set this before React loaded.)
   useEffect(() => {
     const el = document.documentElement;
     if (phase === "intro" || phase === "booting") {
@@ -1331,8 +1290,8 @@ export function LabHero() {
     };
   }, [zoomed]);
 
-  // ` toggles the terminal, Esc backs out of whatever is open; +/−/0 zoom
-  // and, once zoomed in, the arrows look around
+  // ` toggles the terminal, Esc backs out of whatever is open (and then out of
+  // the room); +/−/0 zoom and the arrows look around
   useEffect(() => {
     if (phase !== "live") return;
     const onKey = (e: KeyboardEvent) => {
@@ -1382,21 +1341,7 @@ export function LabHero() {
   // overflow-clip, not hidden: a hidden box can still be scrolled programmatically
   return (
     <section id="hero" ref={root} data-phase={phase} className="relative min-h-[100svh] overflow-clip bg-[#050706]">
-      <noscript>
-        <style>{`#hero [data-head]{opacity:1!important}#hero [data-term]{display:none}`}</style>
-      </noscript>
-
-      {/* Touch: tapping the room (not an object) zooms in on that spot */}
-      <div
-        aria-hidden
-        className="absolute inset-0"
-        onClick={(e) => {
-          if (!live || focusRef.current || zoomedRef.current) return;
-          if (window.matchMedia(TOUCH_MQ).matches) lab.current?.zoomAt(e.clientX, e.clientY, 2.4);
-        }}
-      />
-
-      {/* Scene + click targets — slightly oversized so parallax never shows an edge */}
+      {/* Scene + click targets, slightly oversized so parallax never shows an edge */}
       <div ref={sceneWrap} className="pointer-events-none absolute -inset-4 opacity-0 md:-inset-6">
         <LabScene />
         <LabMarkers show={markers} />
@@ -1409,46 +1354,6 @@ export function LabHero() {
       </div>
 
       <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-[#050706] to-transparent" />
-
-      {/* Headline — beside the room on wide screens, above it on phones. Stays in the DOM for crawlers. */}
-      <div
-        data-head=""
-        inert={!live || zoomed}
-        className={`pointer-events-none absolute inset-x-0 top-[4.75rem] z-10 flex flex-col items-center px-5 text-center side:inset-x-auto side:left-[max(1.5rem,5vw)] side:top-1/2 side:max-w-[min(30rem,34vw)] side:-translate-y-1/2 side:items-start side:px-0 side:text-left ${
-          live ? "" : "opacity-0"
-        }`}
-      >
-        <p data-hl="" className="mb-3 select-none font-mono text-xs text-white/45 md:text-[13px]">
-          <span className="text-putty">
-            {user}@{HOST}
-          </span>
-          :~$ whoami
-        </p>
-        <h1
-          data-hl=""
-          className="text-[38px] font-bold uppercase leading-[0.95] tracking-tight text-white sm:text-5xl side:text-[clamp(2.5rem,4.6vw,4.75rem)]"
-        >
-          Youssef Garas
-        </h1>
-        <p data-hl="" className="mt-3 font-mono text-[12px] leading-relaxed text-white/70 sm:text-sm">
-          Cybersecurity Engineer · AI Systems · Frontend Design
-        </p>
-        <p data-hl="" className="mt-4 hidden max-w-[26rem] text-sm leading-relaxed text-white/55 side:block">
-          This is my room: my real homelab, my certs, my desk. Click anything to take a closer look, or step inside and
-          look around.
-        </p>
-        <p data-hl="" className="mt-2 font-mono text-[11px] text-white/45 side:hidden">
-          tap anything · step inside to look around
-        </p>
-        <div data-hl="" className="pointer-events-auto mt-5 flex items-center gap-3.5 side:mt-7">
-          <button type="button" onClick={() => pick("monitor")} className="key key-light">
-            View projects →
-          </button>
-          <button type="button" onClick={() => pick("phone")} className="key">
-            Get in touch
-          </button>
-        </div>
-      </div>
 
       {/* Dim behind a close-up; clicking it backs out */}
       <div ref={dim} className="invisible absolute inset-0 z-30 bg-[#030504]/80 opacity-0" onClick={() => closeFocus()} />
@@ -1472,23 +1377,6 @@ export function LabHero() {
             closeFocus();
           }}
         />
-      )}
-
-      {/* Outside: the way in, made easy to spot (it pings until you've been inside once) */}
-      {live && !zoomed && (
-        <button
-          type="button"
-          data-dock=""
-          onClick={stepInside}
-          className={`key absolute bottom-5 right-4 z-20 motion-safe:animate-[lab-fade-in_0.6s_ease-out_0.5s_backwards] sm:bottom-6 sm:right-5 ${
-            beenInside ? "" : "key-beacon"
-          }`}
-        >
-          <span aria-hidden className="text-putty">
-            ⤢
-          </span>{" "}
-          step inside
-        </button>
       )}
 
       {/* Inside: the way back out, zoom controls, and how to get around the first time */}
@@ -1536,8 +1424,9 @@ export function LabHero() {
         </>
       )}
 
-      {/* The homelab's console: the whole screen at the start (login), then a
-          drop-down from the top of the window after boot (` or the dock) */}
+      {/* The homelab's console: the whole screen as the start screen (and the
+          login after logging out), then a drop-down from the top of the window
+          (` or the dock) */}
       <div
         ref={termWrap}
         data-term=""
@@ -1557,15 +1446,18 @@ export function LabHero() {
         />
       </div>
 
-      {/* Lives outside the room so the music keeps playing in classic view */}
+      {/* Lives outside the room so the music keeps playing back on the page */}
       {music && createPortal(<NowPlaying onStop={() => setMusic(false)} />, document.body)}
 
-      {/* The way out of the start screen: straight to the classic site, or skip the cinematic */}
+      {/* The way out of the start screen: skip the cinematic, or (when it isn't
+          the opening, which ends on the page anyway) straight back to the page */}
       {(phase === "intro" || phase === "booting") && (
         <div className="absolute right-5 top-5 z-[60] flex items-center gap-6 font-mono text-[11px] uppercase tracking-[0.25em] sm:right-8 sm:top-7">
-          <button type="button" onClick={() => setView("classic")} className="text-white/40 transition-colors hover:text-white/85">
-            {isPhone() ? "classic view" : "back to the page"}
-          </button>
+          {!opening && (
+            <button type="button" onClick={() => setView("classic")} className="text-white/40 transition-colors hover:text-white/85">
+              back to the page
+            </button>
+          )}
           <button type="button" onClick={skipIntro} className="text-white/40 transition-colors hover:text-white/85">
             skip intro →
           </button>
