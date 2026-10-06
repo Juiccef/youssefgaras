@@ -48,6 +48,21 @@ export function Nav() {
     return () => observers.forEach((o) => o.disconnect());
   }, []);
 
+  // Section links scroll the page but shouldn't stay in the address: a link
+  // copied from the address bar should open at the top, not at #projects.
+  useEffect(() => {
+    const clean = () => {
+      if (window.location.hash) history.replaceState(null, "", window.location.pathname + window.location.search);
+    };
+    // a link that arrives with a section still goes there first
+    const t = window.setTimeout(clean, 1500);
+    window.addEventListener("hashchange", clean);
+    return () => {
+      window.clearTimeout(t);
+      window.removeEventListener("hashchange", clean);
+    };
+  }, []);
+
   const go = (e: React.MouseEvent, target: string) => {
     setMenuOpen(false);
     if (!room) return;

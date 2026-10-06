@@ -21,10 +21,13 @@ const archivo = Archivo({
   axes: ["wdth"],
 });
 
+// The picture a shared link shows is the room: opengraph-image.png and
+// twitter-image.png next to this file (Next adds the tags).
 export const metadata: Metadata = {
-  title: "Youssef Garas | Software Engineer",
+  metadataBase: new URL("https://youssefgaras.vercel.app"),
+  title: "Youssef Garas | Cybersecurity Engineer",
   description:
-    "CS + Cybersecurity student at Georgia State University. Building intelligent systems at the intersection of AI, security, and full-stack engineering.",
+    "Georgia State Computer Science graduate (Cybersecurity), CCNA and Security+, and an endpoint intern at McKenney's. Step inside my homelab and see my projects and experience.",
 };
 
 export default function RootLayout({
