@@ -193,7 +193,6 @@ export function MyRack({ x, y, seed }: { x: number; y: number; seed: number }): 
   return {
     base,
     lights,
-    occluders: [boxHull(x, y, 0, CW, CD, CH), boxHull(rx, ry, z0, WW, DD, HH + HANDLE)],
     hotspots,
     tags,
     parts,

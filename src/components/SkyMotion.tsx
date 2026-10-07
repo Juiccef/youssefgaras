@@ -36,8 +36,11 @@ export function SkyMotion() {
       const px = x.toFixed(4);
       const py = y.toFixed(4);
       const sy = window.scrollY.toFixed(1);
-      // looked up each time: some of these layers come and go
+      // looked up each time: some of these layers come and go. Only the sky
+      // that's showing is moved (the page's, or the one behind the room).
+      const room = document.documentElement.dataset.view === "room";
       for (const el of document.querySelectorAll<HTMLElement>("[data-sky-vars]")) {
+        if (el.hasAttribute("data-room-sky") !== room) continue;
         el.style.setProperty("--px", px);
         el.style.setProperty("--py", py);
         el.style.setProperty("--sy", sy);
@@ -62,12 +65,16 @@ export function SkyMotion() {
       kick();
     };
 
+    // stepping into the room or back out swaps the sky: bring the new one up to date
+    const swap = new MutationObserver(kick);
+    swap.observe(document.documentElement, { attributes: true, attributeFilter: ["data-view"] });
     window.addEventListener("pointermove", onMove, { passive: true });
     window.addEventListener("scroll", kick, { passive: true });
     document.documentElement.addEventListener("pointerleave", onLeave);
     kick();
     return () => {
       cancelAnimationFrame(raf);
+      swap.disconnect();
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("scroll", kick);
       document.documentElement.removeEventListener("pointerleave", onLeave);

@@ -4,7 +4,7 @@
 // phone lie on the desk. Every object here opens a close-up.
 
 import type { ReactNode } from "react";
-import { Box, FloorShadow, LED, TONES, boxHull, type Device, type Hotspot } from "./devices";
+import { Box, FloorShadow, LED, TONES, type Device, type Hotspot } from "./devices";
 import { K, faceLeft, faceRect, faceRight, faceTop, iso, onLeft, onRight, pts, rng, type Pt } from "./iso";
 import { PHOTOS, ROOM_POSTER } from "@/lib/content";
 
@@ -323,7 +323,6 @@ export function Room(): Device {
       <rect x={cx - 7} y={top - 3} width={14} height={1.6} rx={0.8} fill="#2b2f33" />
     </g>
   );
-  const [lx, ly] = iso(LAMP.x, LAMP.y, LAMP.z0);
   const lights = (
     <g data-lights="room" opacity={0}>
       <g transform={rightFace}>
@@ -352,9 +351,6 @@ export function Room(): Device {
         {CERT_FRAMES.map((c) => pictureLight(c.u + CERT_W / 2, CERT_V, c.id))}
         {pictureLight(POSTER.u + POSTER.w / 2, POSTER.v, "poster")}
       </g>
-      {/* lamp: warm light spilling out under the shade */}
-      <ellipse cx={lx} cy={ly} rx={46} ry={30} fill="url(#lab-glow-warm)" opacity={0.6} />
-      <ellipse cx={lx} cy={ly} {...isoEllipse(LAMP.r0 - 1)} fill="#fde2b8" opacity={0.6} />
     </g>
   );
 
@@ -380,12 +376,13 @@ export function Room(): Device {
     },
   ];
 
-  return { base, lights, occluders: [], hotspots };
+  return { base, lights, hotspots };
 }
 
 // ─── Floor lamp in the back corner ──────────────────────────────────────
 // Its own device so it's painted over the cable that runs behind it along
-// the baseboard (its light lives in the room's lights layer).
+// the baseboard. Its light comes on with the room's, and is drawn over the
+// shade: that's the lit underside.
 
 export function Lamp(): Device {
   const base = (
@@ -395,12 +392,15 @@ export function Lamp(): Device {
       <LampShade />
     </g>
   );
-  return {
-    base,
-    lights: null,
-    // base plate and pole (not the shade: its lit underside is drawn on top of it)
-    occluders: [boxHull(LAMP.x - 7, LAMP.y - 7, 0, 14, 14, 2.4), boxHull(LAMP.x - 1.5, LAMP.y - 1.5, 0, 3, 3, LAMP.z0)],
-  };
+  const [lx, ly] = iso(LAMP.x, LAMP.y, LAMP.z0);
+  const lights = (
+    <g data-lights="room" opacity={0}>
+      {/* warm light spilling out under the shade */}
+      <ellipse cx={lx} cy={ly} rx={46} ry={30} fill="url(#lab-glow-warm)" opacity={0.6} />
+      <ellipse cx={lx} cy={ly} {...isoEllipse(LAMP.r0 - 1)} fill="#fde2b8" opacity={0.6} />
+    </g>
+  );
+  return { base, lights };
 }
 
 /** Drum shade: two iso ellipses joined at their widest points. */
@@ -462,7 +462,7 @@ export function Chair({ x, y }: { x: number; y: number }): Device {
     </g>
   );
   // seat + gas lift, and the backrest
-  return { base, lights: null, occluders: [boxHull(x - 18, y - 18, 0, 36, 36, 49), boxHull(x - 17, y + 13, 0, 34, 5, 97)] };
+  return { base, lights: null };
 }
 
 // ─── Rubber band ball ───────────────────────────────────────────────────
@@ -620,5 +620,5 @@ export function DeskItems({ x, y, z }: { x: number; y: number; z: number }): Dev
     { id: "phone", label: "Contact: phone", points: padBox(phone, 5), face: flat(phone, 1.25) },
   ];
 
-  return { base, lights, occluders: [], hotspots };
+  return { base, lights, hotspots };
 }

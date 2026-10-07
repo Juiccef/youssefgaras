@@ -434,7 +434,9 @@ html[data-lab-zoomed] #hero[data-dragging] {
 }
 
 /* "You can click this": a putty dot on a dark disc that breathes, with a
-   slow ping (hints.tsx). The delay is staggered per marker on .lab-mk. */
+   slow ping (hints.tsx). The delay is staggered per marker on .lab-mk. They
+   only move while they're showing ([data-on]): once the hints are done with
+   they'd otherwise go on animating unseen. */
 .lab-mk-back {
   fill: rgba(6, 7, 8, 0.62);
   stroke: rgba(230, 217, 181, 0.5);
@@ -442,15 +444,20 @@ html[data-lab-zoomed] #hero[data-dragging] {
 }
 .lab-mk-dot {
   fill: #e6d9b5;
-  animation: lab-mk-breathe 2.8s ease-in-out infinite;
-  animation-delay: inherit;
 }
 .lab-mk-ring {
   fill: none;
   stroke: #e6d9b5;
   stroke-width: 1;
+  opacity: 0;
   transform-box: fill-box;
   transform-origin: center;
+}
+[data-on] .lab-mk-dot {
+  animation: lab-mk-breathe 2.8s ease-in-out infinite;
+  animation-delay: inherit;
+}
+[data-on] .lab-mk-ring {
   animation: lab-mk-ping 2.8s ease-out infinite;
   animation-delay: inherit;
 }
@@ -503,7 +510,7 @@ html[data-lab-music] .lab-note { animation: lab-note 2.6s ease-out infinite; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .lab-led-act, .lab-led-disk, .lab-led-pulse, .lab-spin, .lab-disc-spin, .lab-mk-dot { animation: none; }
+  .lab-led-act, .lab-led-disk, .lab-led-pulse, .lab-spin, .lab-disc-spin, [data-on] .lab-mk-dot { animation: none; }
   .lab-mk-ring { display: none; }
   .lab-tip, .lab-tip[data-on] { transition: none; }
   html[data-lab-music] .lab-note { animation: none; opacity: 0.8; }

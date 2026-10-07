@@ -66,6 +66,7 @@ export function LabMarkers({ show }: { show: boolean }) {
       className={`pointer-events-none absolute inset-0 h-full w-full transition-opacity duration-1000 ${show ? "opacity-100" : "opacity-0"}`}
       viewBox={INITIAL_VIEWBOX}
       preserveAspectRatio="xMidYMid meet"
+      data-on={show ? "" : undefined}
       aria-hidden
     >
       {MARKERS.map((m, i) => (

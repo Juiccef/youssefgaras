@@ -142,5 +142,5 @@ export function RecordPlayer(): Device {
     face,
   };
 
-  return { base, lights, occluders: [boxHull(CAB.x, CAB.y, 0, CAB.w, CAB.d, TT_TOP)], hotspots: [hotspot] };
+  return { base, lights, hotspots: [hotspot] };
 }

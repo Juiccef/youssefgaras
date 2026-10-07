@@ -1,9 +1,9 @@
 import { memo } from "react";
-import { Desk, LED, boxHull, type Device, type Hotspot, type LedColor, type Tag } from "./devices";
+import { Desk, LED, type Device, type Hotspot, type LedColor, type Tag } from "./devices";
 import { Camera, MyRack } from "./mylab";
 import { RecordPlayer } from "./record";
 import { Chair, DeskItems, Lamp, ROOM, ROOM_CORNERS, Room } from "./room";
-import { faceTop, iso, pathD, pts, screenLength, type Pt } from "./iso";
+import { faceTop, iso, pathD, screenLength, type Pt } from "./iso";
 
 // ─── Layout ──────────────────────────────────────────────────────────────
 // One room: the desk with the CRT against the window wall, the real rack on
@@ -21,7 +21,6 @@ const CAMERA: Device = {
     </g>
   ),
   lights: <g data-lights="camera" opacity={0} />,
-  occluders: [boxHull(668, 518, 65, 26, 24, 21)],
   hotspots: [camera.hotspot],
 };
 
@@ -105,11 +104,21 @@ export const INITIAL_VIEWBOX = [ROOM_BOUNDS.x - 60, ROOM_BOUNDS.y - 60, ROOM_BOU
 const [haloX, haloY] = iso((ROOM.x0 + ROOM.x1) / 2, (ROOM.y0 + ROOM.y1) / 2, 0);
 const [burstX, burstY] = iso(...BLOCK_PT);
 
+const LAYER = "absolute inset-0 h-full w-full";
+/** Its own compositing layer: what moves in it is redrawn without touching the art around it. */
+const MOVING = `${LAYER} [will-change:transform]`;
+
+// Four layers, back to front, in the order things really stand in the room:
+// the shell and floor, the light that falls on them, the furniture, and the
+// furniture's own lights. So a packet running along the baseboard goes behind
+// the rack because the rack is painted after it. (One light layer on top of
+// everything would need a mask to hide it behind the furniture, and a mask
+// that size is composited again on every frame.)
 export const LabScene = memo(function LabScene() {
   return (
     <>
-      {/* ── Static layer ── */}
-      <svg data-cam="" className="absolute inset-0 h-full w-full" viewBox={INITIAL_VIEWBOX} preserveAspectRatio="xMidYMid meet" aria-hidden>
+      {/* ── The room: shell, floor, cables ── */}
+      <svg data-cam="" className={LAYER} viewBox={INITIAL_VIEWBOX} preserveAspectRatio="xMidYMid meet" aria-hidden>
         <defs>
           <radialGradient id="lab-shadow">
             <stop offset="0%" stopColor="#000" stopOpacity={0.75} />
@@ -133,36 +142,6 @@ export const LabScene = memo(function LabScene() {
           <pattern id="lab-perf" width={3} height={3} patternUnits="userSpaceOnUse">
             <rect width={1.3} height={1.3} fill="#0a0b0c" />
           </pattern>
-        </defs>
-
-        <ellipse cx={haloX} cy={haloY} rx={720} ry={420} fill="url(#lab-halo)" />
-
-        {ROOM_DEVICE.base}
-
-        {/* floor cables */}
-        <g fill="none" strokeLinecap="round" strokeLinejoin="round">
-          {Object.entries(CABLES).map(([k, c]) => (
-            <g key={k}>
-              <path d={pathD(c.pts)} stroke="#0c1211" strokeWidth={3.2} />
-              <path d={pathD(c.pts)} stroke="rgba(160,255,230,0.07)" strokeWidth={1} />
-            </g>
-          ))}
-        </g>
-
-        {DEVICES.map((d, i) => (
-          <g key={i}>{d.base}</g>
-        ))}
-      </svg>
-
-      {/* ── Animated layer (own compositing layer: repaints never touch the static art) ── */}
-      <svg
-        data-cam=""
-        className="absolute inset-0 h-full w-full [will-change:transform]"
-        viewBox={INITIAL_VIEWBOX}
-        preserveAspectRatio="xMidYMid meet"
-        aria-hidden
-      >
-        <defs>
           {GLOW_COLORS.map((c) => (
             <radialGradient key={c} id={`lab-glow-${c}`}>
               <stop offset="0%" stopColor={LED[c]} stopOpacity={0.7} />
@@ -184,49 +163,66 @@ export const LabScene = memo(function LabScene() {
           <pattern id="lab-scan" width={4} height={1.1} patternUnits="userSpaceOnUse">
             <rect width={4} height={0.45} fill="rgba(0,0,0,0.35)" />
           </pattern>
-          {/* Floor and wall lights are hidden where a device stands in front of them */}
-          <mask id="lab-occlude" maskUnits="userSpaceOnUse" x={-400} y={-400} width={2400} height={1900}>
-            <rect x={-400} y={-400} width={2400} height={1900} fill="#fff" />
-            {DEVICES.flatMap((d) => d.occluders).map((hull, i) => (
-              <polygon key={i} points={pts(hull)} fill="#000" />
-            ))}
-          </mask>
         </defs>
 
-        <g mask="url(#lab-occlude)">
-          {/* wall lights sit behind the furniture */}
-          {ROOM_DEVICE.lights}
+        <ellipse cx={haloX} cy={haloY} rx={720} ry={420} fill="url(#lab-halo)" />
 
-          {POOLS.map((p, i) => (
-            <g key={i} data-pool={p.id} opacity={0} transform={faceTop(p.x - p.r, p.y - p.r, 0)}>
-              <circle cx={p.r} cy={p.r} r={p.r} fill={`url(#lab-pool-${p.color})`} />
+        {ROOM_DEVICE.base}
+
+        {/* floor cables */}
+        <g fill="none" strokeLinecap="round" strokeLinejoin="round">
+          {Object.entries(CABLES).map(([k, c]) => (
+            <g key={k}>
+              <path d={pathD(c.pts)} stroke="#0c1211" strokeWidth={3.2} />
+              <path d={pathD(c.pts)} stroke="rgba(160,255,230,0.07)" strokeWidth={1} />
             </g>
           ))}
+        </g>
+      </svg>
 
-          <g fill="none" strokeLinecap="round" strokeLinejoin="round">
-            {Object.entries(CABLES).map(([k, c]) => (
-              <g key={k} data-cable={k} opacity={0}>
-                <path d={pathD(c.pts)} stroke={LED[c.color]} strokeOpacity={0.12} strokeWidth={5} />
-                <path id={`lab-cable-${k}`} d={pathD(c.pts)} stroke={LED[c.color]} strokeOpacity={0.55} strokeWidth={1.1} />
-              </g>
-            ))}
+      {/* ── Light on the walls and floor, and what runs along the cables ── */}
+      <svg data-cam="" className={MOVING} viewBox={INITIAL_VIEWBOX} preserveAspectRatio="xMidYMid meet" aria-hidden>
+        {ROOM_DEVICE.lights}
+
+        {POOLS.map((p, i) => (
+          <g key={i} data-pool={p.id} opacity={0} transform={faceTop(p.x - p.r, p.y - p.r, 0)}>
+            <circle cx={p.r} cy={p.r} r={p.r} fill={`url(#lab-pool-${p.color})`} />
           </g>
+        ))}
 
-          {PACKETS.flatMap((p) =>
-            Array.from({ length: p.n }, (_, i) => (
-              <g key={`${p.cable}${p.dir}${i}`} data-pkt="" data-cable={p.cable} data-dir={p.dir} opacity={0}>
-                <circle r={9} fill={`url(#lab-glow-${p.color})`} />
-                <circle r={2} fill="#ecfdf5" />
-              </g>
-            )),
-          )}
-
-          <g data-blocked-pkt="" opacity={0}>
-            <circle r={9} fill="url(#lab-glow-red)" />
-            <circle r={2} fill={LED.red} />
-          </g>
+        <g fill="none" strokeLinecap="round" strokeLinejoin="round">
+          {Object.entries(CABLES).map(([k, c]) => (
+            <g key={k} data-cable={k} opacity={0}>
+              <path d={pathD(c.pts)} stroke={LED[c.color]} strokeOpacity={0.12} strokeWidth={5} />
+              <path id={`lab-cable-${k}`} d={pathD(c.pts)} stroke={LED[c.color]} strokeOpacity={0.55} strokeWidth={1.1} />
+            </g>
+          ))}
         </g>
 
+        {PACKETS.flatMap((p) =>
+          Array.from({ length: p.n }, (_, i) => (
+            <g key={`${p.cable}${p.dir}${i}`} data-pkt="" data-cable={p.cable} data-dir={p.dir} opacity={0}>
+              <circle r={9} fill={`url(#lab-glow-${p.color})`} />
+              <circle r={2} fill="#ecfdf5" />
+            </g>
+          )),
+        )}
+
+        <g data-blocked-pkt="" opacity={0}>
+          <circle r={9} fill="url(#lab-glow-red)" />
+          <circle r={2} fill={LED.red} />
+        </g>
+      </svg>
+
+      {/* ── The furniture ── */}
+      <svg data-cam="" className={LAYER} viewBox={INITIAL_VIEWBOX} preserveAspectRatio="xMidYMid meet" aria-hidden>
+        {DEVICES.map((d, i) => (
+          <g key={i}>{d.base}</g>
+        ))}
+      </svg>
+
+      {/* ── Its lights, and the labels over everything ── */}
+      <svg data-cam="" className={MOVING} viewBox={INITIAL_VIEWBOX} preserveAspectRatio="xMidYMid meet" aria-hidden>
         {/* the firewall on the P340 drops it */}
         <circle data-fw-burst="" cx={burstX} cy={burstY} r={2} fill="none" stroke={LED.red} strokeWidth={1} opacity={0} />
         {/* floats on the wall above the jack, with a leader down to where the packet died */}

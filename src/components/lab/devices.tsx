@@ -4,8 +4,8 @@ import { faceLeft, faceRect, faceTop, onLeft, pts, rng, type Pt } from "./iso";
 // Every device renders into two layers that share one viewBox:
 //   base   — static art (never repaints after power-up)
 //   lights — LEDs, screens, glows (the only layer that animates)
-// plus `occluders`: silhouettes used to mask floor cables and packets that
-// pass behind or under the device.
+// The room's own lights and the floor cables are painted under every
+// device's base, so they pass behind the furniture (LabScene).
 
 /**
  * A clickable object: screen-space polygon, plus the world-space face it sits
@@ -20,7 +20,6 @@ export type Tag = { id: string; text: string; anchor: [number, number]; box: [nu
 export type Device = {
   base: ReactNode;
   lights: ReactNode;
-  occluders: Pt[][];
   hotspots?: Hotspot[];
   tags?: Tag[];
 };
@@ -215,10 +214,6 @@ export function Desk({ x, y, seed }: { x: number; y: number; seed: number }): De
   return {
     base,
     lights,
-    occluders: [
-      boxHull(x, y, 0, w, d, top),
-      boxHull(x + 32, y + 4, top, 52, 50, CRT.h + 3),
-    ],
     hotspots: [{ id: "monitor", label: "Projects: the CRT", points: faceRect(frontAt, 0, 0, CRT.w, CRT.h), face }],
   };
 }

@@ -193,7 +193,8 @@ export function LabHero() {
 
       const measure = () => {
         const h = hero.getBoundingClientRect();
-        const s = svgs[0].getBoundingClientRect();
+        // the scene's box, not an svg's: those are moved about by the camera (see apply)
+        const s = sceneWrap.current!.getBoundingClientRect();
         // ignore the parallax offset: the camera is always framed for the resting position
         const px = Number(gsap.getProperty(sceneWrap.current, "x")) || 0;
         const py = Number(gsap.getProperty(sceneWrap.current, "y")) || 0;
@@ -236,13 +237,58 @@ export function LabHero() {
         if (flash) tipTimer = gsap.delayedCall(2, () => showTip(null));
       };
 
+      // Changing the viewBox redraws every layer of the room, far too much to
+      // do on every frame of a zoom or a drag. So the room is drawn a bit
+      // past the edges of the screen (the layers' wrapper is that much bigger
+      // than the scene), and while the camera moves, that picture is slid
+      // and stretched instead: a transform on the wrapper, which costs
+      // nothing. It's drawn again, sharp, at the new view once the camera
+      // rests, when the view runs off what's drawn, or a few times a second
+      // during a long zoom in.
+      const mover = hero.querySelector<HTMLElement>("[data-cam-move]");
+      /** The view the room is drawn at, how far past it the drawing goes (scene units), and the scene's size then. */
+      let drawn: (View & { pad: number; ew: number; eh: number }) | null = null;
+      let drawnAt = 0;
+      let settle = 0;
+      let mkScale = "";
+      const redraw = () => {
+        window.clearTimeout(settle);
+        // px drawn past each edge: enough for a good drag before the next redraw
+        const m = Math.round(Math.min(M.ew, M.eh) * 0.3);
+        const pad = (m * cam.w) / M.ew;
+        const v = [cam.x - pad, cam.y - pad, cam.w + 2 * pad, cam.h + 2 * pad].map((n) => n.toFixed(2)).join(" ");
+        svgs.forEach((s) => s.setAttribute("viewBox", v));
+        if (mover) {
+          mover.style.inset = `${-m}px`;
+          // the scene's corner, so the stretch is about the same point whatever the margin
+          mover.style.transformOrigin = `${m}px ${m}px`;
+          mover.style.transform = "";
+        }
+        drawn = { ...cam, pad, ew: M.ew, eh: M.eh };
+        drawnAt = performance.now();
+      };
       const apply = () => {
         if (!shown() || ![cam.x, cam.y, cam.w, cam.h].every(Number.isFinite) || cam.w <= 0) return;
-        const v = `${cam.x.toFixed(2)} ${cam.y.toFixed(2)} ${cam.w.toFixed(2)} ${cam.h.toFixed(2)}`;
-        svgs.forEach((s) => s.setAttribute("viewBox", v));
+        const p = drawn;
+        // how far the drawn picture would be stretched to show this view
+        const k = p ? p.w / cam.w : 0;
+        const fits = !!p && p.ew === M.ew && p.eh === M.eh && Math.abs(p.w / p.h - cam.w / cam.h) < 1e-3;
+        const covered =
+          !!p && cam.x >= p.x - p.pad && cam.y >= p.y - p.pad && cam.x + cam.w <= p.x + p.w + p.pad && cam.y + cam.h <= p.y + p.h + p.pad;
+        const blurry = k > 3 || (k > 1.8 && performance.now() - drawnAt > 300);
+        if (!mover || !p || !fits || !covered || blurry || reduced.current) redraw();
+        else {
+          const s = M.ew / cam.w;
+          mover.style.transform = `translate(${((p.x - cam.x) * s).toFixed(2)}px,${((p.y - cam.y) * s).toFixed(2)}px) scale(${k.toFixed(5)})`;
+          window.clearTimeout(settle);
+          settle = window.setTimeout(redraw, 140);
+        }
         // markers stay the same size on screen however far in you are
-        const k = `scale(${((cam.w / M.ew) * mkSize).toFixed(4)})`;
-        marks.forEach((g) => g.setAttribute("transform", k));
+        const mk = `scale(${((cam.w / M.ew) * mkSize).toFixed(4)})`;
+        if (mk !== mkScale) {
+          mkScale = mk;
+          marks.forEach((g) => g.setAttribute("transform", mk));
+        }
         placeTip();
       };
 
@@ -1029,6 +1075,7 @@ export function LabHero() {
         hero.removeEventListener("wheel", onWheel);
         ro.disconnect();
         cancelAnimationFrame(raf);
+        window.clearTimeout(settle);
         if (onMove) window.removeEventListener("pointermove", onMove);
       };
     },
@@ -1343,9 +1390,12 @@ export function LabHero() {
     <section id="hero" ref={root} data-phase={phase} className="relative min-h-[100svh] overflow-clip bg-[#050706]">
       {/* Scene + click targets, slightly oversized so parallax never shows an edge */}
       <div ref={sceneWrap} className="pointer-events-none absolute -inset-4 opacity-0 md:-inset-6">
-        <LabScene />
-        <LabMarkers show={markers} />
-        <LabHotspots enabled={live && !focus} onPick={pick} onHover={(id) => lab.current?.showTip(id)} />
+        {/* the camera slides and stretches this while it moves (apply) */}
+        <div data-cam-move="" className="absolute inset-0 origin-top-left [will-change:transform]">
+          <LabScene />
+          <LabMarkers show={markers} />
+          <LabHotspots enabled={live && !focus} onPick={pick} onHover={(id) => lab.current?.showTip(id)} />
+        </div>
         <div
           data-tip=""
           aria-hidden

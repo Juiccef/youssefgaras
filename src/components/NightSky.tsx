@@ -40,8 +40,28 @@ const STAR_FIELDS = [
   { tile: 760, stars: starLayer(4201, 30, 0.8), d: 13, s: 0.045 },
   { tile: 900, stars: starLayer(613, 14, 0.95, [1.6, 2.4]), d: 22, s: 0.08 },
 ];
-const MILKY_STARS = starLayer(99, 70, 0.5);
-const BAND = "linear-gradient(118deg, transparent 28%, rgba(0,0,0,0.6) 44%, #000 50%, rgba(0,0,0,0.6) 56%, transparent 72%)";
+// The Milky Way is a strip across the sky, densest along its middle and gone
+// by its edges. The fall-off is in the stars themselves (each is dimmed by
+// how far out it sits) and not a mask over the strip: a masked layer is
+// composited again on every frame it moves.
+const MILKY_FADE = (u: number) => {
+  const d = Math.abs(u - 0.5) * 2;
+  return d < 0.27 ? 1 - (d / 0.27) * 0.4 : 0.6 * (1 - (d - 0.27) / 0.73);
+};
+const MILKY_STARS = (() => {
+  const r = prng(99);
+  return Array.from({ length: 64 }, () => {
+    const x = r();
+    const y = (r() * 100).toFixed(2);
+    const o = ((0.18 + r() * 0.32) * MILKY_FADE(x)).toFixed(2);
+    const s = r() < 0.12 ? 1.6 : 1;
+    const tint = TINTS[Math.floor(r() * TINTS.length)];
+    return `radial-gradient(${s}px ${s}px at ${(x * 100).toFixed(2)}% ${y}%, rgba(${tint},${o}), transparent)`;
+  }).join(",");
+})();
+const MILKY_HAZE = "linear-gradient(90deg, transparent 5%, rgba(160,170,235,0.037) 41%, rgba(190,180,240,0.07) 50%, rgba(160,170,235,0.037) 59%, transparent 95%)";
+/** How wide the strip is: it crosses the screen on a slant, so it grows with both sides. */
+const MILKY_WIDTH = "(38.9vw + 20.6lvh)";
 
 /** Brighter stars that twinkle: [left %, top %, delay s, duration s]. */
 const TWINKLES = (() => {
@@ -219,14 +239,15 @@ function Sky() {
           }
         />
       ))}
-      {/* Milky Way: a faint band with denser stars */}
+      {/* Milky Way: a faint strip with denser stars, leaning across the sky */}
       <div
-        className="par absolute -inset-10 opacity-70"
+        className="par absolute h-[170vmax] rotate-[28deg] opacity-70"
         style={{
-          backgroundImage: `${MILKY_STARS}, linear-gradient(118deg, transparent 30%, rgba(160,170,235,0.05) 46%, rgba(190,180,240,0.07) 50%, rgba(160,170,235,0.05) 54%, transparent 70%)`,
-          backgroundSize: "700px 600px, 100% 100%",
-          maskImage: BAND,
-          WebkitMaskImage: BAND,
+          width: `calc(${MILKY_WIDTH})`,
+          left: `calc(50% - ${MILKY_WIDTH} / 2)`,
+          top: "calc(50lvh - 85vmax)",
+          backgroundImage: `${MILKY_STARS}, ${MILKY_HAZE}`,
+          backgroundSize: "100% 600px, 100% 100%",
           ...depth(9),
         }}
       />
