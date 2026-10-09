@@ -35,6 +35,13 @@ export function setView(v: SiteView) {
   window.dispatchEvent(new Event(VIEW_EVENT));
 }
 
+/** Out to the page, at this section (the room drops whatever is open when the view changes). */
+export function toSection(id: string) {
+  setView("classic");
+  // the page is hidden while the room is the view: it has to be laid out again before it can scroll
+  requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView({ behavior: "smooth" }));
+}
+
 function subscribe(cb: () => void) {
   window.addEventListener(VIEW_EVENT, cb);
   return () => window.removeEventListener(VIEW_EVENT, cb);

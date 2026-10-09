@@ -20,16 +20,10 @@ import {
   SOCIALS,
 } from "@/lib/content";
 import { SONG } from "./music";
-import { setView } from "./view";
+import { toSection as jump } from "./view";
 
 export const SHEET_IDS = ["monitor", "resume", "badge", "phone", "camera", "cert-ccna", "cert-secplus", "cert-gux", "cert-codepath", "print", "map", "record", "poster"];
 export const isSheet = (id: string | null | undefined): id is string => !!id && SHEET_IDS.includes(id);
-
-/** Over to classic view, at this section (the room drops the close-up when the view changes). */
-const jump = (id: string) => {
-  setView("classic");
-  requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView({ behavior: "smooth" }));
-};
 
 // ─── Shared chrome ───────────────────────────────────────────────────────
 
@@ -260,7 +254,9 @@ function BadgeSheet({ onClose }: { onClose: () => void }) {
         </button>
       ))}
     >
-      <div className="w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-2xl bg-[#f1f5f9] text-slate-900 shadow-[0_40px_120px_-20px_rgba(0,0,0,0.95)]">
+      {/* The card is as tall as its text, which is more than a phone has room for: past that it
+          scrolls, so the buttons under it (close among them) stay on screen */}
+      <div className="max-h-[calc(100svh-11.5rem)] w-[min(22rem,calc(100vw-2rem))] overflow-y-auto rounded-2xl bg-[#f1f5f9] text-slate-900 shadow-[0_40px_120px_-20px_rgba(0,0,0,0.95)] [scrollbar-color:rgba(100,116,139,0.45)_transparent] [scrollbar-width:thin] sm:max-h-[calc(100svh-8.75rem)]">
         <div className="flex justify-center bg-[#e2e8f0] py-2">
           <span className="h-2 w-14 rounded-full bg-[#94a3b8]/70" />
         </div>

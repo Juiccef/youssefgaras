@@ -3,6 +3,7 @@
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { CERTS, EXPERIENCE, HOMELAB, PROJECTS, RESUME_URL, SOCIALS } from "@/lib/content";
+import { toSection as jump } from "./view";
 
 // The homelab server's own Linux console (Debian, tty1). Modes:
 //   intro — the start screen: "penguin login:", then a shell; return / `boot` powers the lab on.
@@ -71,9 +72,9 @@ const NMAP: { port: string; state: "open" | "filtered"; svc: string; target?: st
   { port: "8443/tcp", state: "open", svc: "websites", target: "websites" },
 ];
 
+// The console is in the room and the sections are out on the page: `open` and the
+// services `nmap` lists step outside to them (view.ts).
 const SECTIONS = ["projects", "homelab", "websites", "experience", "about", "photography", "contact"];
-
-const jump = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
 
 function stamp(d = new Date()) {
   const p = (n: number) => String(n).padStart(2, "0");

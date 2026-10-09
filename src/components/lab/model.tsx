@@ -533,25 +533,25 @@ export const PartViewer = forwardRef<
     gsap.to(fade.current, { opacity: 0, duration: 0.16, onComplete: () => setPart(next) });
   };
 
-  // Drag to spin
-  const drag = useRef<{ x: number; y: number } | null>(null);
+  // Drag to spin: one finger does it (`id`), so a second one landing can't throw the model around
+  const drag = useRef<{ id: number; x: number; y: number } | null>(null);
   const onDown = (e: React.PointerEvent) => {
-    if (mode.current === "lift") return;
-    drag.current = { x: e.clientX, y: e.clientY };
+    if (mode.current === "lift" || drag.current) return;
+    drag.current = { id: e.pointerId, x: e.clientX, y: e.clientY };
     mode.current = "drag";
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
   };
   const onMove = (e: React.PointerEvent) => {
-    if (!drag.current) return;
+    if (drag.current?.id !== e.pointerId) return;
     const dx = e.clientX - drag.current.x;
     const dy = e.clientY - drag.current.y;
-    drag.current = { x: e.clientX, y: e.clientY };
+    drag.current = { id: e.pointerId, x: e.clientX, y: e.clientY };
     rest.current = { rx: clamp(rest.current.rx - dy * 0.35, -80, 30), ry: rest.current.ry + dx * 0.5 };
     st.current = { ...st.current, rx: rest.current.rx, ry: rest.current.ry };
     draw();
   };
-  const onUp = () => {
-    if (!drag.current) return;
+  const onUp = (e: React.PointerEvent) => {
+    if (drag.current?.id !== e.pointerId) return;
     drag.current = null;
     mode.current = "idle";
     clock.current = 0;

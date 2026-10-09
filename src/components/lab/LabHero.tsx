@@ -442,11 +442,18 @@ export function LabHero() {
             window.addEventListener("wheel", hold, { passive: false });
             window.setTimeout(() => window.removeEventListener("wheel", hold), 700);
           },
+          // cut short: you're still inside, so the room has to answer again (left busy, there'd be no way out)
+          onInterrupt: () => {
+            busy.current = false;
+            gsap.to("[data-dock]", { autoAlpha: 1, duration: 0.2 * d(), overwrite: true });
+          },
         });
       };
 
       /** Move the camera to `v` (gliding when `glideFor` > 0). Zoomed all the way out, you're back outside. */
       const zoomTo = (v: View, glideFor = 0) => {
+        // the camera is on a move of its own (stepping in or out, a close-up): that one finishes first
+        if (busy.current) return;
         if (M.ew / v.w <= restScale(M) * 1.04) {
           if (zoomed) leave();
           return;
@@ -842,17 +849,18 @@ export function LabHero() {
           overwrite: true,
           onUpdate: apply,
           onComplete: () => void (busy.current = false),
+          onInterrupt: () => void (busy.current = false),
         });
       });
 
       const resetView = safe(() => {
-        if (!zoomed) return;
+        if (!zoomed || busy.current) return;
         M = measure();
         glide(insideView(), 0.8);
       });
 
       const nudge = safe((dx: number, dy: number) => {
-        if (!zoomed) return;
+        if (!zoomed || busy.current) return;
         const s = M.ew / cam.w;
         glide(clampView({ ...cam, x: cam.x + dx / s, y: cam.y + dy / s }), 0.4);
       });
@@ -915,27 +923,41 @@ export function LabHero() {
 
       // Drag to look around (once zoomed in), pinch/wheel to zoom
       const canMove = () => phaseRef.current === "live" && !focusRef.current && !busy.current;
-      const touches = new Map<number, { x: number; y: number }>();
-      let moved = 0;
+      /** Every finger (or the mouse) that is down on the room: where it is now, and where it landed. */
+      const touches = new Map<number, { x: number; y: number; x0: number; y0: number }>();
+      /** The press has turned into a drag or a pinch: the click that ends it mustn't open anything. */
+      let dragged = false;
+      /** How far (px) a press can wander and still be a tap: a fingertip rolls further than a mouse slips. */
+      const slop = (e: PointerEvent) => (e.pointerType === "mouse" ? 6 : 10);
       const spread = () => {
         const [a, b] = [...touches.values()];
         return { d: Math.hypot(a.x - b.x, a.y - b.y), x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
       };
       const onDown = (e: PointerEvent) => {
+        // every press starts clean: a touch drag ends without a click to do it (onClickCapture)
+        if (!touches.size) dragged = false;
         if (!canMove()) return;
+        // only the main button drags: a right click's release can be lost to its menu
+        if (e.pointerType === "mouse" && e.button !== 0) return;
         if ((e.target as Element).closest("button, a, input, [data-term], [data-hud]")) return;
-        touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
-        if (touches.size === 1) moved = 0;
+        touches.set(e.pointerId, { x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY });
         M = measure();
       };
       const onDrag = (e: PointerEvent) => {
         const p = touches.get(e.pointerId);
         if (!p) return;
+        // the camera has taken over (pinching all the way out steps outside): the gesture is over,
+        // and it mustn't stop that move, which is what lets go of `busy`
+        if (busy.current) {
+          touches.clear();
+          delete hero.dataset.dragging;
+          return;
+        }
         if (touches.size === 1) {
           const dx = e.clientX - p.x;
           const dy = e.clientY - p.y;
-          moved += Math.abs(dx) + Math.abs(dy);
-          if (zoomed && moved > 6) {
+          if (Math.hypot(e.clientX - p.x0, e.clientY - p.y0) > slop(e)) dragged = true;
+          if (zoomed && dragged) {
             gsap.killTweensOf(cam);
             const s = M.ew / cam.w;
             Object.assign(cam, clampView({ ...cam, x: cam.x - dx / s, y: cam.y - dy / s }));
@@ -953,7 +975,7 @@ export function LabHero() {
         p.x = e.clientX;
         p.y = e.clientY;
         const after = spread();
-        moved += 10;
+        dragged = true;
         if (before.d <= 0) return;
         // pan with the fingers (once zoomed), then zoom around them
         if (zoomed) {
@@ -970,11 +992,11 @@ export function LabHero() {
       };
       // a drag that ends on an object must not open it
       const onClickCapture = (e: MouseEvent) => {
-        if (moved > 6) {
+        if (dragged) {
           e.stopPropagation();
           e.preventDefault();
         }
-        moved = 0;
+        dragged = false;
       };
       // The room is the whole page, so the wheel zooms it (the console scrolls as usual)
       const onWheel = (e: WheelEvent) => {
@@ -1013,10 +1035,13 @@ export function LabHero() {
 
       // ── Keep the room framed ────────────────────────────────────────
       let raf = 0;
+      let later = 0;
       const reframe = () => {
         cancelAnimationFrame(raf);
+        window.clearTimeout(later);
         raf = requestAnimationFrame(() => {
-          if (busy.current) return;
+          // the camera is on a move of its own: frame the room once it has landed
+          if (busy.current) return void (later = window.setTimeout(reframe, 200));
           const s = M.ew / cam.w;
           const was = shown();
           M = measure();
@@ -1075,6 +1100,7 @@ export function LabHero() {
         hero.removeEventListener("wheel", onWheel);
         ro.disconnect();
         cancelAnimationFrame(raf);
+        window.clearTimeout(later);
         window.clearTimeout(settle);
         if (onMove) window.removeEventListener("pointermove", onMove);
       };
@@ -1183,7 +1209,8 @@ export function LabHero() {
     else if (act === "out") lab.current?.zoomBy(1 / 1.4);
     else if (act === "reset") lab.current?.resetView();
     else if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
-    else root.current?.requestFullscreen?.().catch(() => {});
+    // the whole page, not the room alone: the sky behind it and the now-playing card are outside it
+    else document.documentElement.requestFullscreen?.().catch(() => {});
   };
 
   // ── Close-ups ────────────────────────────────────────────────────────
@@ -1238,6 +1265,8 @@ export function LabHero() {
       const l = lab.current;
       if (!l) return;
       if (v === "classic") {
+        // full screen is the room's (its key is in there): whichever way you came out, it ends with it
+        if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
         if (phaseRef.current === "booting") l.skipBoot();
         l.sleep();
         focusRef.current = null;
