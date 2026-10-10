@@ -24,7 +24,7 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-12">
           <div>
             {/* #top is the top of the page in every browser; #hero is the room, which isn't on the page down here */}
-            <a href="#top" aria-label="Back to top" className="key key-sm key-icon mb-4 text-[12px] font-bold tracking-tight">
+            <a href="#top" aria-label="YG, back to top" className="key key-sm key-icon mb-4 text-[12px] font-bold tracking-tight">
               YG
             </a>
             <p className="text-white/60 text-sm leading-relaxed max-w-[220px]">

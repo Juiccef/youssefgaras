@@ -1,6 +1,9 @@
 // Portfolio content shared by the classic sections, the homelab room panels
 // and the terminal — one source of truth.
 
+/** Where the site lives: link previews, robots.txt and the sitemap are built from it. */
+export const SITE_URL = "https://youssefgaras.vercel.app";
+
 export type Project = {
   name: string;
   description: string;

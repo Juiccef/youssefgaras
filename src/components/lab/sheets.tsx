@@ -56,18 +56,28 @@ function Layer({
   /** Phones: sit at the top, leaving the bottom for the now-playing card. */
   topOnPhones?: boolean;
 }) {
+  // A screen too short for the object and its buttons (a phone on its side): the layer scrolls
+  // instead of pushing them off both ends, and the buttons stay in reach at the bottom of it.
+  // The auto margins centre the pair while it still fits (centring it any other way would cut
+  // off its top once it doesn't).
   return (
     <div
       data-focus-layer=""
-      className={`pointer-events-none absolute inset-0 z-40 flex flex-col items-center justify-center gap-4 px-3 pb-5 pt-14 sm:pt-16 ${
+      className={`pointer-events-none absolute inset-0 z-40 flex flex-col items-center justify-center gap-4 px-3 pb-5 pt-14 sm:pt-16 [@media(max-height:30rem)]:justify-start [@media(max-height:30rem)]:overflow-y-auto [@media(max-height:30rem)]:!py-3 [@media(max-height:30rem)]:[scrollbar-width:none] ${
         topOnPhones ? "max-sm:justify-start max-sm:pt-20" : ""
       }`}
     >
-      <div data-lift="" className="pointer-events-auto origin-top-left opacity-0">
+      <div data-lift="" className="pointer-events-auto origin-top-left opacity-0 [@media(max-height:30rem)]:mt-auto">
         {children}
       </div>
-      <div data-chrome="" className="pointer-events-auto invisible flex max-w-full flex-wrap items-center justify-center gap-x-3 gap-y-3 opacity-0">
-        {caption && <span className={`mr-1 font-mono text-[11px] text-white/45 ${topOnPhones ? "max-sm:hidden" : ""}`}>{caption}</span>}
+      <div
+        data-chrome=""
+        className="pointer-events-auto invisible flex max-w-full flex-wrap items-center justify-center gap-x-3 gap-y-3 opacity-0 [@media(max-height:30rem)]:sticky [@media(max-height:30rem)]:bottom-0 [@media(max-height:30rem)]:mb-auto"
+      >
+        {/* on a short screen the buttons sit over the bottom of the object, and a line of text there would run across it */}
+        {caption && (
+          <span className={`mr-1 font-mono text-[11px] text-white/45 [@media(max-height:30rem)]:hidden ${topOnPhones ? "max-sm:hidden" : ""}`}>{caption}</span>
+        )}
         {actions}
         <button type="button" onClick={onClose} className={`${btn} sm:pr-7`}>
           ✕ {closeLabel} <span className="key-legend hidden sm:block">esc</span>
@@ -359,7 +369,8 @@ function CameraSheet({ onClose }: { onClose: () => void }) {
         </>
       }
     >
-      <div className="relative mt-6 w-[min(40rem,calc(100vw-1.5rem))] rounded-[22px] bg-[linear-gradient(180deg,#2a2d31,#141619)] p-[4%] pr-[26%] shadow-[0_40px_120px_-20px_rgba(0,0,0,0.95),inset_0_1px_0_rgba(255,255,255,0.08)]">
+      {/* the last term keeps the camera and its buttons on a short screen, like the other close-ups' sizes do */}
+      <div className="relative mt-6 w-[min(40rem,calc(100vw-1.5rem),calc((100svh-11.5rem)*1.83))] rounded-[22px] bg-[linear-gradient(180deg,#2a2d31,#141619)] p-[4%] pr-[26%] shadow-[0_40px_120px_-20px_rgba(0,0,0,0.95),inset_0_1px_0_rgba(255,255,255,0.08)]">
         {/* EVF hump */}
         <div className="absolute -top-6 left-[30%] h-8 w-[22%] rounded-t-2xl bg-[#1f2226]">
           <div className="mx-auto mt-1.5 h-4 w-[70%] rounded-lg bg-[#0b0c0e]" />
@@ -552,7 +563,8 @@ function PrintSheet({ onClose }: { onClose: () => void }) {
       <div className="bg-[#0c0d0e] p-2.5 shadow-[0_40px_120px_-20px_rgba(0,0,0,0.95)] sm:p-3.5">
         {/* fixed mat: % padding would resolve against the shrink-wrapped parent and push the photo out */}
         <div className="bg-[#ecebe7] p-4 sm:p-8">
-          <div className="relative aspect-[1.375] w-[min(48rem,calc(100vw-5.5rem),calc((100svh-14rem)*1.375))]">
+          {/* the mat and frame are wider from sm up, so there the photo leaves more room for them */}
+          <div className="relative aspect-[1.375] w-[min(48rem,calc(100vw-5.5rem),calc((100svh-14rem)*1.375))] sm:w-[min(48rem,calc(100vw-7.5rem),calc((100svh-14rem)*1.375))]">
             <Image key={PHOTOS[i]} src={PHOTOS[i]} alt={`Photo ${i + 1} of ${PHOTOS.length}`} fill sizes="50rem" className="object-contain" />
           </div>
         </div>

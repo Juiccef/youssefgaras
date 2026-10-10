@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
@@ -21,6 +21,17 @@ const ExpandableGallery: React.FC<ExpandableGalleryProps> = ({ images, className
   // phone row: which photo is in the middle
   const rowRef = useRef<HTMLDivElement>(null);
   const [current, setCurrent] = useState(0);
+
+  // While a photo is open the page behind it holds still (globals.css): a swipe on the photo used to scroll it
+  const viewing = selectedIndex !== null;
+  useEffect(() => {
+    if (!viewing) return;
+    const el = document.documentElement;
+    el.dataset.photoOpen = "";
+    return () => {
+      delete el.dataset.photoOpen;
+    };
+  }, [viewing]);
 
   const openImage = (index: number) => {
     setOpened(true);
@@ -108,10 +119,14 @@ const ExpandableGallery: React.FC<ExpandableGalleryProps> = ({ images, className
             onMouseLeave={() => setHoveredIndex(null)}
             onClick={() => openImage(index)}
           >
+            {/* lazy: these are the full-size originals, and a phone (where this strip is
+                hidden) would otherwise download all of them the moment the page opens */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={image}
               alt={`Photography ${index + 1}`}
+              loading="lazy"
+              decoding="async"
               className="w-full h-full object-cover"
             />
             <motion.div

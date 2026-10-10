@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Archivo, Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { SITE_URL } from "@/lib/content";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -24,7 +25,7 @@ const archivo = Archivo({
 // The picture a shared link shows is the room: opengraph-image.png and
 // twitter-image.png next to this file (Next adds the tags).
 export const metadata: Metadata = {
-  metadataBase: new URL("https://youssefgaras.vercel.app"),
+  metadataBase: new URL(SITE_URL),
   title: "Youssef Garas | Cybersecurity Engineer",
   description:
     "Georgia State Computer Science graduate (Cybersecurity), CCNA and Security+, and an endpoint intern at McKenney's. Step inside my homelab and see my projects and experience.",
@@ -53,7 +54,8 @@ export default function RootLayout({
           }}
         />
         <noscript>
-          <style>{`#boot-intro{display:none}`}</style>
+          {/* the sections fade in from hidden as they scroll into view (BlurFade): without JavaScript they just show */}
+          <style>{`#boot-intro{display:none}[data-reveal]{opacity:1!important;transform:none!important}`}</style>
         </noscript>
         {children}
       </body>

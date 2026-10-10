@@ -182,7 +182,7 @@ export function Homelab() {
             <ol className="divide-y divide-white/[0.07] overflow-hidden rounded-2xl border border-white/10 bg-[#0a0d19]">
               {HOMELAB.services.map((s, i) => (
                 <li key={s.name} className="grid grid-cols-[2.75rem_minmax(0,1fr)] md:grid-cols-[3.25rem_minmax(0,1fr)]">
-                  <div className="flex flex-col items-center gap-2.5 border-r border-white/[0.07] bg-white/[0.03] pt-5 font-mono text-[10px] text-white/40">
+                  <div className="flex flex-col items-center gap-2.5 border-r border-white/[0.07] bg-white/[0.03] pt-5 font-mono text-[10px] text-white/50">
                     {two(i + 1)}
                     <span
                       aria-hidden

@@ -19,7 +19,7 @@ export function Experience() {
                 {/* a ticket (.ticket in globals.css): the dates on the stub, the job on the rest */}
                 <article className="ticket">
                   <div className="ticket-stub flex items-center justify-between gap-4 px-5 md:flex-col md:items-start md:px-6 md:py-7">
-                    <p className="order-last shrink-0 font-mono text-[10px] uppercase tracking-[0.2em] text-white/40 md:order-none">
+                    <p className="order-last shrink-0 font-mono text-[10px] uppercase tracking-[0.2em] text-white/50 md:order-none">
                       <span className="hidden md:inline">No. </span>
                       {two(i + 1)} / {two(experiences.length)}
                     </p>

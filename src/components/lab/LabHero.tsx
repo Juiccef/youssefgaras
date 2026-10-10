@@ -1339,7 +1339,8 @@ export function LabHero() {
   // Close-ups get the whole screen: the site nav steps aside
   useEffect(() => {
     const el = document.documentElement;
-    if (focus) el.dataset.labFocus = "";
+    // it says what is open ("part" for a rack part): the now-playing card keeps out of its way (globals.css)
+    if (focus) el.dataset.labFocus = isPart(focus) ? "part" : focus;
     else delete el.dataset.labFocus;
     return () => {
       delete el.dataset.labFocus;
@@ -1481,7 +1482,8 @@ export function LabHero() {
                 key={b.act}
                 type="button"
                 onClick={() => hudAction(b.act)}
-                aria-label={b.label}
+                // the name has to include what the key shows (its shortcut), or voice control can't find it
+                aria-label={b.act === "reset" ? `${b.label}, 0` : b.label}
                 title={b.label}
                 className="key key-sm key-icon text-sm"
               >

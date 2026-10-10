@@ -20,6 +20,8 @@ export function BlurFade({ children, className, delay = 0 }: BlurFadeProps) {
 
   return (
     <motion.div
+      // the hidden start is in the server's HTML, so with JavaScript off nothing would ever show it: layout.tsx's <noscript> does
+      data-reveal=""
       initial={{ opacity: 0, y: 14 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.15 }}

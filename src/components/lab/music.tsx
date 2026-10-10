@@ -23,7 +23,8 @@ export function NowPlaying({ onStop }: { onStop: () => void }) {
     <div
       data-music-card=""
       // desktop: top-right, over bare wall (bottom-right is where the record player is);
-      // phones: bottom-right, under the record in its close-up
+      // phones: bottom-right, under the record in its close-up. While another close-up is
+      // open it steps out of the way of that one's buttons (data-music-card in globals.css)
       className="fixed bottom-[4.5rem] right-4 z-50 w-fit rounded-xl border border-white/10 bg-[#0b0d0c]/95 p-2 shadow-[0_24px_70px_-16px_rgba(0,0,0,0.95)] motion-safe:animate-[lab-fade-in_0.35s_ease-out] sm:bottom-auto sm:right-5 sm:top-[4.5rem]"
     >
       <div className="flex items-center justify-between gap-2 pl-1">

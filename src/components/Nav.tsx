@@ -90,7 +90,7 @@ export function Nav() {
       )}
     >
       <nav className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between gap-4">
-        <a href="#hero" onClick={goHome} aria-label="Youssef Garas, back to top" className="key key-sm key-icon text-[12px] font-bold tracking-tight">
+        <a href="#hero" onClick={goHome} aria-label="YG, Youssef Garas, back to top" className="key key-sm key-icon text-[12px] font-bold tracking-tight">
           YG
         </a>
 

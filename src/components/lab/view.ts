@@ -37,9 +37,26 @@ export function setView(v: SiteView) {
 
 /** Out to the page, at this section (the room drops whatever is open when the view changes). */
 export function toSection(id: string) {
+  // Coming from the console on a phone, its keyboard is up, and it has to be down before the
+  // page scrolls: as it goes, iOS puts the page back where it was, on top of a scroll already
+  // under way (seen in Safari, where `open projects` then landed at the top most times).
+  const field = document.activeElement instanceof HTMLElement && document.activeElement.matches("input, textarea") ? document.activeElement : null;
+  field?.blur();
   setView("classic");
   // the page is hidden while the room is the view: it has to be laid out again before it can scroll
-  requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView({ behavior: "smooth" }));
+  const go = () => requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView({ behavior: "smooth" }));
+  const vv = window.visualViewport;
+  // a keyboard doesn't shrink the window, only the part of it you can see
+  const covered = () => !!vv && vv.height < window.innerHeight - 60;
+  if (!field || !vv || !covered()) return go();
+  const done = () => {
+    window.clearTimeout(giveUp);
+    vv.removeEventListener("resize", check);
+    go();
+  };
+  const check = () => void (covered() || done());
+  const giveUp = window.setTimeout(done, 700);
+  vv.addEventListener("resize", check);
 }
 
 function subscribe(cb: () => void) {

@@ -222,6 +222,12 @@ html[data-been-inside] .name-line > span { animation: none; }
 .no-scrollbar { scrollbar-width: none; }
 .no-scrollbar::-webkit-scrollbar { display: none; }
 
+/* A photo open in the viewer (gallery-animation.tsx): the page behind it holds still */
+html[data-photo-open],
+html[data-photo-open] body {
+  overflow: hidden;
+}
+
 /* ── The room in the page's intro (HeroRoom.tsx) ──────────────────────
    A picture of the room: it floats, leans toward the mouse (--px / --py
    from SkyMotion) and has a soft shadow on the "ground" under it. */
@@ -343,13 +349,16 @@ html[data-boot="seen"] #boot-intro {
 /* The room's start screen is only the terminal on black, and inside the room
    and its close-ups the nav steps aside. */
 header {
-  transition: opacity 0.6s ease;
+  transition: opacity 0.6s ease, visibility 0s;
 }
 html[data-lab-intro] header,
 html[data-lab-focus] header,
 html[data-lab-zoomed] header {
   opacity: 0;
   pointer-events: none;
+  /* once it has faded it is gone for the keyboard and screen readers too: Tab used to walk through its invisible links */
+  visibility: hidden;
+  transition: opacity 0.6s ease, visibility 0s 0.6s;
 }
 /* A first visit opens on the room's console start screen (intro-gate.ts):
    until LabHero takes over, show it as the server rendered it. */
@@ -507,6 +516,24 @@ html[data-lab-music] .lab-note { animation: lab-note 2.6s ease-out infinite; }
   0% { opacity: 0; transform: translate(0, 0); }
   18% { opacity: 0.9; }
   100% { opacity: 0; transform: translate(7px, -28px); }
+}
+
+/* The now-playing card (music.tsx) has to stay on screen while the song plays, so it
+   keeps out of a close-up's way instead of hiding. On a phone it sits at the bottom, which is
+   where a close-up has its buttons: while one is open it moves to the top (the record's own
+   close-up is laid out around it and leaves it be). On wider screens it sits top right, which
+   is where a rack part has its card: while one is open it moves across to the left. */
+@media (width < 40rem) {
+  html[data-lab-focus]:not([data-lab-focus="record"]) [data-music-card] {
+    top: 0.5rem;
+    bottom: auto;
+  }
+}
+@media (width >= 40rem) {
+  html[data-lab-focus="part"] [data-music-card] {
+    left: 1.25rem;
+    right: auto;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
